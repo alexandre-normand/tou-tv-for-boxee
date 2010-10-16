@@ -1,0 +1,352 @@
+<?xml version="1.0"?>
+<window type="window" id="14000">
+	<defaultcontrol always="true">120</defaultcontrol>
+	<allowoverlay>no</allowoverlay>
+	<onload lang="python"><![CDATA[
+import re
+mc.ShowDialogWait()
+sg = mc.Http()
+html = sg.Get("http://www.tou.tv/repertoire")
+items = mc.ListItems()
+results = re.compile('href="(.+?)">\s+<h1 class="titreemission">(.+?)</h1>').findall(html)
+print "trying to load list of shows..."
+for url, name in results:
+	url = "http://www.tou.tv" + url
+	item = mc.ListItem(mc.ListItem.MEDIA_UNKNOWN)
+	item.SetLabel(name)
+	item.SetPath(url)
+	print "adding ", name
+	items.append(item)
+window = mc.GetWindow(14000)
+window.GetList(120).SetItems(items)
+window.GetList(120).SetFocusedItem(0)
+mc.HideDialogWait()
+]]></onload>
+	<controls>
+		<control type="image">
+			<width>1280</width>
+			<height>720</height>
+			<texture>black.png</texture>
+		</control>
+		<control type="image">
+			<width>1280</width>
+			<height>720</height>
+			<texture>bc_background.png</texture>
+		</control>
+		<control type="group">
+			<control type="image">
+				<visible>false</visible>
+				<width>1280</width>
+				<height>50</height>
+				<texture>black.png</texture>
+				<animation effect="fade" end="50" time="0" condition="true">Conditional</animation>
+			</control>
+			<control type="label" id="100">
+				<posx>24</posx>
+				<posy>10</posy>
+				<width>400</width>
+				<height>50</height>
+				<align>left</align>
+				<font>sans23b</font>
+				<label>Émissions tou.tv</label>
+				<animation effect="fade" end="30" time="0" condition="true">Conditional</animation>
+			</control>
+			<control type="image">
+				<posy>5</posy>
+				<posx>1220</posx>
+				<width>42</width>
+				<height>40</height>
+				<texture>bc_logo.png</texture>
+			</control>
+			<control type="image">
+				<visible>false</visible>
+				<posy>50</posy>
+				<width>1280</width>
+				<height>2</height>
+				<texture>bc_highlight.png</texture>
+			</control>
+		</control>
+		<control type="group">
+			<control type="image">
+				<posy>270</posy>
+				<width>1280</width>
+				<height>450</height>
+				<texture>black.png</texture>
+				<animation effect="fade" end="70" time="0" condition="true">Conditional</animation>
+			</control>
+			<control type="image">
+				<posy>268</posy>
+				<width>1280</width>
+				<height>2</height>
+				<texture>bc_highlight.png</texture>
+			</control>
+		</control>
+		<control type="group">
+			<visible>!Container(120).IsLoading + !Container(120).IsEmpty</visible>
+			<posx>40</posx>
+			<posy>288</posy>
+			<control type="fixedlist" id="120">
+				<width>670</width>
+				<height>418</height>
+				<onup>-</onup>
+				<ondown>-</ondown>
+				<onleft>-</onleft>
+				<onright>-</onright>
+				<scrolltime>200</scrolltime>
+				<pagecontrol>60</pagecontrol>
+				<focusposition>3</focusposition>
+				<orientation>vertical</orientation>
+				<itemlayout width="630" height="46">
+					<control type="label">
+						<posx>40</posx>
+						<width>670</width>
+						<height>30</height>
+						<align>left</align>
+						<font>sans28</font>
+						<label>$INFO[ListItem.tvshowtitle]: Saison $INFO[ListItem.season], $INFO[ListItem.title]</label>
+						<visible>!IsEmpty(Container(120).Listitem.title)</visible>
+						<animation effect="fade" end="30" time="0" condition="true">Conditional</animation>
+					</control>
+					<control type="label">
+						<posx>40</posx>
+						<width>670</width>
+						<height>30</height>
+						<align>left</align>
+						<font>sans28</font>
+						<info>Listitem.Label</info>
+						<visible>IsEmpty(Container(120).Listitem.title)</visible>
+						<animation effect="fade" end="30" time="0" condition="true">Conditional</animation>
+					</control>
+				</itemlayout>
+				<focusedlayout width="630" height="50">
+					<control type="label" id="5656">
+						<posx>40</posx>
+						<width>670</width>
+						<height>30</height>
+						<align>left</align>
+						<font>sans28</font>
+						<label>$INFO[ListItem.tvshowtitle]: Saison $INFO[ListItem.season], $INFO[ListItem.title]</label>
+						<textcolor>white</textcolor>
+						<scroll>true</scroll>
+			            <animation type="Focus">
+			                <effect type="fade" start="30" end="100" time="200"/>
+							<effect type="zoom" center="200,0" start="100" end="120" time="200" />
+			            </animation>
+			            <animation type="UnFocus">
+			                <effect type="fade" start="200" end="30" time="200"/>
+							<effect type="zoom" center="200,0" start="120" end="100" time="200" delay="100" />
+			            </animation>
+			            <visible>!IsEmpty(Container(120).Listitem.title)</visible>
+					</control>
+					<control type="label" id="5656">
+						<posx>40</posx>
+						<width>670</width>
+						<height>30</height>
+						<align>left</align>
+						<font>sans28</font>
+						<info>Listitem.Label</info>
+						<textcolor>white</textcolor>
+						<scroll>true</scroll>
+			            <animation type="Focus">
+			                <effect type="fade" start="30" end="100" time="200"/>
+							<effect type="zoom" center="200,0" start="100" end="120" time="200" />
+			            </animation>
+			            <animation type="UnFocus">
+			                <effect type="fade" start="200" end="30" time="200"/>
+							<effect type="zoom" center="200,0" start="120" end="100" time="200" delay="100" />
+			            </animation>
+			            <visible>IsEmpty(Container(120).Listitem.title)</visible>
+					</control>
+				</focusedlayout>
+				<content type="url" url="">
+					<onclick lang="python"><![CDATA[
+import re
+TOU_TV_MEDIA_FLAG = 'toutv.mediaData'
+
+win = mc.GetActiveWindow()
+
+showlist = mc.GetActiveWindow().GetList(120)
+item = showlist.GetItem(showlist.GetFocusedItem())
+if item.GetMediaType() == mc.ListItem.MEDIA_UNKNOWN:
+	mc.ShowDialogWait()
+	win.PushState()
+	sg = mc.Http()
+	showurl = item.GetPath()
+	name = item.GetLabel()
+	showpage = sg.Get(showurl)
+	items = mc.ListItems()
+	if TOU_TV_MEDIA_FLAG not in showpage:
+		info = re.compile('<img id=".+?" src="(.+?)".+?class="saison">(.+?)</p>.+?class="episode".+?href="(.+?)".+?<b>(.+?)(&nbsp;)*?</b>.+?<p>(.+?)</p>', re.DOTALL).findall(showpage)
+		print "loading " , name, "..."
+		for img, saison, urlvideo, title, trash, desc in info:
+			item = mc.ListItem(mc.ListItem.MEDIA_VIDEO_EPISODE)
+			item.SetLabel(name)
+			videopageurl = "http://www.tou.tv" + urlvideo;
+			videopage = sg.Get(videopageurl)
+			p = re.compile("toutv.releaseUrl='(.+?)'")
+			pid = p.findall(videopage)
+			definitionurl = "http://release.theplatform.com/content.select?pid=" + pid[0] + '&format=SMIL'
+			videodef = sg.Get(definitionurl)
+			rtmp_url = re.search('<meta base="rtmp:(.+?)"', videodef)
+			playurl = re.search('<ref src="mp4:(.+?)"', videodef)
+			if playurl: 
+				playpath = "mp4:" + playurl.group(1)
+				rtmpURL = "rtmp:" + rtmp_url.group(1)
+				authpath = re.search('auth=(.*)&', rtmpURL)
+				item.SetPath(rtmpURL)
+				item.SetThumbnail(img)
+				item.SetTitle(title)
+				seasonValues = re.search('(\d+)', saison)
+				item.SetSeason(int(seasonValues.group(1)))
+				item.SetTVShowTitle(name)
+				item.SetDescription(desc)
+				item.SetProperty("PlayPath", playpath)
+			else:
+				mc.LogError("skipping item with url " + showurl + ", videopagedefinition: " + videodef)
+			items.append(item)
+	else:
+		desc, season, title, img = re.compile('toutv.mediaData.+?"description":"(.+?)".+?"seasonNumber":(.+?),.+?"title":"(.+?)".+?toutv.imageA=\'(.+?)\'').findall(showpage)[0]
+		item = mc.ListItem(mc.ListItem.MEDIA_VIDEO_EPISODE)
+		item.SetLabel(name)
+		item.SetTitle(title)
+		item.SetTVShowTitle(name)
+		item.SetDescription(desc)
+		item.SetSeason(int(season))
+		item.SetThumbnail(img)
+		videopageurl = "http://www.tou.tv" + showurl;
+		videopage = sg.Get(videopageurl)
+		p = re.compile("toutv.releaseUrl='(.+?)'")
+		pid = p.findall(videopage)
+		definitionurl = "http://release.theplatform.com/content.select?pid=" + pid[0] + '&format=SMIL'
+		videodef = sg.Get(definitionurl)
+		if playurl: 
+			playpath = "mp4:" + playurl.group(1)
+			item.SetPath(playpath)
+			item.SetThumbnail(img)
+			item.SetTitle(title)
+			seasonValues = re.search('(\d+)', saison)
+			item.SetSeason(int(seasonValues.group(1)))
+			item.SetTVShowTitle(name)
+			item.SetDescription(desc)
+		else:
+			mc.LogError("skipping item with url " + showurl + ", videopagedefinition: " + videodef)
+	showlist.SetItems(items)
+	print "checking if everything is there:"
+	items = showlist.GetItems()
+	for item in items:
+		print "label:", item.GetLabel()
+		print "path:", item.GetPath()
+		print "thumb:", item.GetThumbnail()
+		print "title:", item.GetTitle()
+		print "------"
+	showlist.SetFocusedItem(0)
+	mc.HideDialogWait()
+else:
+	mc.GetPlayer().PlayWithActionMenu(item)
+]]></onclick>
+				</content>
+			</control>
+		</control>
+		<control type ="group">
+			<visible>!Container(120).IsLoading + !Container(120).IsEmpty</visible>
+			<posx>1000</posx>
+			<posy>280</posy>
+			<control type="image">
+				<posy>10</posy>
+				<posx>-30</posx>
+				<width>250</width>
+				<height>200</height>
+				<bordersize>4</bordersize>
+				<bordertexture>black.png</bordertexture>
+				<aspectratio align="center">keep</aspectratio>
+				<info>Container(120).Listitem.thumb</info>
+			</control>
+			<control type="grouplist">
+				<posy>224</posy>
+				<posx>120</posx>
+				<itemgap>8</itemgap>
+				<orientation>vertical</orientation>
+				<animation effect="fade" end="50" time="0" condition="true">Conditional</animation>
+				<control type="label">
+					<width>250</width>
+					<height>25</height>
+					<font>sans21</font>
+					<label>[B]Date[/B]</label>
+					<visible>!IsEmpty(Container(120).Listitem.property(releasedate)) + !IsEmpty(Container(120).Listitem.property(duration))</visible>
+				</control>
+				<control type="label">
+					<width>250</width>
+					<height>25</height>
+					<font>sans21</font>
+					<label>[B]Runtime[/B]</label>
+					<visible>!IsEmpty(Container(120).Listitem.property(releasedate)) + !IsEmpty(Container(120).Listitem.property(duration))</visible>
+				</control>
+				<control type="label">
+					<width>250</width>
+					<height>25</height>
+					<font>sans21</font>
+					<label>[B]Description[/B]</label>
+					<visible>!IsEmpty(Container(120).Listitem.property(description)) + !IsEmpty(Container(120).Listitem.property(releasedate)) + !IsEmpty(Container(120).Listitem.property(duration))</visible>
+				</control>
+			</control>
+		</control>
+		<control type="group">
+			<posy>504</posy>
+			<posx>1110</posx>
+			<visible>!Container(120).IsLoading + !Container(120).IsEmpty</visible>
+			<control type="label">
+				<width>400</width>
+				<height>25</height>
+				<font>sans21</font>
+				<align>right</align>
+				<aligny>center</aligny>
+				<info>Container(120).Listitem.property(releasedate)</info>
+				<visible>!IsEmpty(Container(120).Listitem.property(releasedate)) + !IsEmpty(Container(120).Listitem.property(duration))</visible>
+			</control>
+			<control type="label">
+				<posy>35</posy>
+				<width>400</width>
+				<height>25</height>
+				<font>sans21</font>
+				<align>right</align>
+				<aligny>center</aligny>
+				<info>Container(120).Listitem.property(duration)</info>
+				<visible>!IsEmpty(Container(120).Listitem.property(releasedate)) + !IsEmpty(Container(120).Listitem.property(duration))</visible>
+			</control>
+			<control type="label">
+				<posy>65</posy>
+				<width>370</width>
+				<height>140</height>
+				<font>sans21</font>
+				<align>right</align>
+				<aligny>top</aligny>
+				<wrapmultiline>true</wrapmultiline>
+				<info>Container(120).Listitem.property(description)</info>
+				<visible>!IsEmpty(Container(120).Listitem.property(description)) + !IsEmpty(Container(120).Listitem.property(releasedate)) + !IsEmpty(Container(120).Listitem.property(duration))</visible>
+			</control>
+			<control type="label">
+				<posx>-170</posx>
+				<posy>0</posy>
+				<width>320</width>
+				<height>200</height>
+				<font>sans21</font>
+				<align>left</align>
+				<aligny>top</aligny>
+				<wrapmultiline>true</wrapmultiline>
+				<info>Container(120).Listitem.property(description)</info>
+				<visible>!IsEmpty(Container(120).Listitem.property(description)) + [IsEmpty(Container(120).Listitem.property(releasedate)) | IsEmpty(Container(120).Listitem.property(duration))]</visible>
+			</control>
+		</control>
+		<control type="group">
+			<animation effect="fade" start="0" end="70" time="200" condition="Container(120).IsLoading | Container(120).IsEmpty">Conditional</animation>
+			<animation effect="fade" start="70" end="0" time="200" condition="!Container(120).IsLoading + !Container(120).IsEmpty">Conditional</animation>
+			<control type="image">
+				<visible></visible>
+				<width>1280</width>
+				<height>720</height>
+				<texture>black.png</texture>
+			</control>
+		</control>
+	</controls>
+</window>
+
