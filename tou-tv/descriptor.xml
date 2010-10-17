@@ -6,11 +6,12 @@
   <description>tou.tv videos</description>
   <thumb>http://www.cyberpresse.ca/ui/img/gratuitculturel/logo_toutv.gif</thumb>
   <media>video</media>
-  <copyright>Boxee</copyright>
+  <copyright>GPL</copyright>
   <email>alexandre.bressani.normand@gmail.com</email>
   <type>skin</type>
   <platform>all</platform>
   <minversion>0.9.11</minversion>
   <startWindow>14000</startWindow>
+  <country-allow>ca</country-allow>
   <test-app>true</test-app>
 </app>
