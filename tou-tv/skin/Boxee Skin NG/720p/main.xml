@@ -6,7 +6,8 @@
 import re
 import util
 mc.ShowDialogWait()
-items = util.fetchShows()
+util.initCache()
+items = util.getShowListItems(util.getShowsFromCache())
 window = mc.GetWindow(14000)
 window.GetList(120).SetItems(items)
 window.GetList(120).SetFocusedItem(0)
@@ -159,7 +160,7 @@ if item.GetMediaType() == mc.ListItem.MEDIA_UNKNOWN:
 	win.PushState()	
 	showurl = item.GetPath()
 	name = item.GetLabel()
-	items = util.fetchShowEpisodes(name, showurl)	
+	items = util.getEpisodeListItems(name, util.fetchShowEpisodes(name, showurl))
 	showlist.SetItems(items)
 	mc.LogDebug("checking if everything is there:")
 	items = showlist.GetItems()
