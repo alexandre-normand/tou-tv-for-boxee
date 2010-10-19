@@ -11,7 +11,14 @@ KEY_LAST_SHOW_LIST_UPDATE = "showsLastUpdated"
 KEY_SHOWS = "shows"
 KEY_SUFFIX_SHOW_PATH = ".path"
 KEY_SUFFIX_EPISODE_LIST = ".episodes"
-KEY_SUFFIX_LAST_UPDATE_EPISODES = ".lastUpdated"
+KEY_SUFFIX_LAST_UPDATED = ".lastUpdated"
+KEY_SUFFIX_SHOW_BACKGROUND = ".backgroundUrl"
+KEY_SUFFIX_EPISODE_TITLE = ".title"
+KEY_SUFFIX_EPISODE_THUMBNAIL = ".thumbnail"
+KEY_SUFFIX_EPISODE_DESCRIPTION = ".description"
+KEY_SUFFIX_EPISODE_VIDEO_URL = ".videoUrl"
+KEY_SUFFIX_EPISODE_SEASON = ".season"
+KEY_SUFFIX_EPISODE_NUMBER = ".number"
 SEPARATOR = "<itemseparator>"
 
 def initCache():
@@ -134,15 +141,141 @@ def getEpisodeListItems(show, episodes):
 		
 	return episodeItems
 	
-def fetchShowEpisodes(name, path):
-	log = "Fetch episode list for " + name
+def updateShowDataCache(show):
+	appConfig = mc.GetApp().GetLocalConfig()
+	episodes = fetchShowEpisodes(show)
+	key = show.name + KEY_SUFFIX_SHOW_BACKGROUND
+	appConfig.SetValue(key, show.backgroundUrl)
+	
+	for episode in episodes:
+		key = show.name + KEY_SUFFIX_EPISODE_LIST
+		appConfig.PushBackValue(key, episode.videoPath)
+		key = episode.videoPath + KEY_SUFFIX_EPISODE_TITLE
+		appConfig.SetValue(key, episode.title)
+		key = episode.videoPath + KEY_SUFFIX_EPISODE_THUMBNAIL
+		appConfig.SetValue(key, episode.thumbnailUrl)
+		key = episode.videoPath + KEY_SUFFIX_EPISODE_DESCRIPTION
+		appConfig.SetValue(key, episode.description)
+		key = episode.videoPath + KEY_SUFFIX_EPISODE_VIDEO_URL
+		appConfig.SetValue(key, episode.videoUrl)
+		key = episode.videoPath + KEY_SUFFIX_EPISODE_SEASON
+		appConfig.SetValue(key, str(episode.season))
+		key = episode.videoPath + KEY_SUFFIX_EPISODE_NUMBER
+		appConfig.SetValue(key, str(episode.episode))
+	
+	lastUpdateTime = time.time()
+	key = show.name + KEY_SUFFIX_LAST_UPDATED
+	appConfig.SetValue(key, str(lastUpdateTime))
+	
+	log = "Updated list of episodes for show (" + show.name + ") and set episode list last update time to:" + str(lastUpdateTime)
+	print log
+	return 1
+	
+def clearShowDataCache(show):
+	appConfig = mc.GetApp().GetLocalConfig()
+	key = show.name + KEY_SUFFIX_EPISODE_LIST
+	episodesString = appConfig.Implode(SEPARATOR, key)
+	log = "Episodes string: " + showsString
+	print log
+	
+	key = show.name + KEY_SUFFIX_SHOW_BACKGROUND
+	appConfig.Reset(key)
+	
+	episodes = []
+	if episodesString != "":
+		episodes = episodesString.split(SEPARATOR)
+		for videoPath in episodes:
+			key = videoPath + KEY_SUFFIX_EPISODE_TITLE
+			appConfig.Reset(key)
+			key = videoPath + KEY_SUFFIX_EPISODE_THUMBNAIL
+			appConfig.Reset(key)
+			key = videoPath + KEY_SUFFIX_EPISODE_DESCRIPTION
+			appConfig.Reset(key)
+			key = videoPath + KEY_SUFFIX_EPISODE_VIDEO_URL
+			appConfig.Reset(key)
+			key = videoPath + KEY_SUFFIX_EPISODE_SEASON
+			appConfig.Reset(key)
+			key = videoPath + KEY_SUFFIX_EPISODE_NUMBER
+			appConfig.Reset(key)
+		key = show.name + KEY_SUFFIX_EPISODE_LIST
+		appConfig.Reset(key)
+		key = show.name + KEY_SUFFIX_LAST_UPDATED
+		appConfig.Reset(key)
+	else:
+		log = "Warning, no episode list found in cache, cache inconsistent"
+		print log
+		
+	log = "Clear show data from cache (" + show.name + ")"
+	print log
+	return 1
+	
+def getShowDataFromCache(show):
+	appConfig = mc.GetApp().GetLocalConfig()
+	key = show.name + KEY_SUFFIX_LAST_UPDATED
+	lastUpdate = appConfig.GetValue(key)
+	
+	if lastUpdate == "":
+		updateShowDataCache(show)
+	else:
+		expirationTime = float(lastUpdate) + DATA_EXPIRATION
+		
+		log = "Calculated expiration time for episodes is: " + str(expirationTime) + ", currentTime is: " + str(time.time())
+		print log
+		
+		if time.time() > expirationTime:
+			updateShowDataCache(show)
+		else:
+			log = "List of episodes still valid, last updated: " + lastUpdate
+			print log
+	
+	key = show.name + KEY_SUFFIX_EPISODE_LIST
+	episodesString = appConfig.Implode(SEPARATOR, key)
+	log = "Episodes string: " + episodesString
+	print log
+	
+	key = show.name + KEY_SUFFIX_SHOW_BACKGROUND
+	show.backgroundUrl = appConfig.GetValue(key)
+	
+	episodes = []
+	if episodesString != "":
+		videoPaths = episodesString.split(SEPARATOR)
+		for videoPath in videoPaths:
+			episode = Episode()
+			episode.videoPath = videoPath
+			log = "parsing cache data for episode: " + str(videoPath)
+			print log
+			key = videoPath + KEY_SUFFIX_EPISODE_TITLE
+			episode.title = appConfig.GetValue(key)
+			key = videoPath + KEY_SUFFIX_EPISODE_THUMBNAIL
+			episode.thumbnailUrl = appConfig.GetValue(key)
+			key = videoPath + KEY_SUFFIX_EPISODE_DESCRIPTION
+			episode.description = appConfig.GetValue(key)
+			key = videoPath + KEY_SUFFIX_EPISODE_VIDEO_URL
+			episode.videoUrl = appConfig.GetValue(key)
+			key = videoPath + KEY_SUFFIX_EPISODE_SEASON
+			episode.season = int(appConfig.GetValue(key))
+			key = videoPath + KEY_SUFFIX_EPISODE_NUMBER
+			episode.episode = int(appConfig.GetValue(key))
+			episodes.append(episode)
+	else:
+		log = "Warning, no episode list found in cache, something is wrong"
+		print log
+		
+	showsString = appConfig.Implode(SEPARATOR, KEY_SHOWS)
+	log = "Finished loading episodes from cache for show (" + show.name + ")"
+	print log
+	
+	return episodes
+	
+def fetchShowEpisodes(show):
+	log = "Fetch episode list for " + show.name
 	print log
 	sg = mc.Http()	
-	showpage = sg.Get(path)
+	showpage = sg.Get(show.path)
 	episodes = []
 	if TOU_TV_MEDIA_FLAG not in showpage:
 		info = re.compile('<img id=".+?" src="(.+?)".+?class="saison">(.+?)</p>.+?class="episode".+?href="(.+?)".+?<b>(.+?)(&nbsp;)*?</b>.+?<p>(.+?)</p>', re.DOTALL).findall(showpage)
-		log = "loading " + name + "..."
+		log = "loading " + show.name + "..."
 		print log
 		for img, saison, urlvideo, title, trash, desc in info:
 			videopageurl = TOU_TV_BASE_URL + urlvideo;
@@ -213,9 +346,9 @@ class Episode:
 class Show:
 	name = ""
 	path = ""
-	episodes = []
+	backgroundUrl = ""
 	
 	def __init__(self):
 		self.name = ""
 		self.path = ""
-		self.episodes = []
+		self.backgroundUrl = ""

@@ -5,9 +5,12 @@
 	<onload lang="python"><![CDATA[
 import re
 import util
+import operator
 mc.ShowDialogWait()
 util.initCache()
-items = util.getShowListItems(util.getShowsFromCache())
+shows = util.getShowsFromCache()
+shows.sort(key=operator.attrgetter('name'))
+items = util.getShowListItems(shows)
 window = mc.GetWindow(14000)
 window.GetList(120).SetItems(items)
 window.GetList(120).SetFocusedItem(0)
@@ -158,9 +161,11 @@ item = showlist.GetItem(showlist.GetFocusedItem())
 if item.GetMediaType() == mc.ListItem.MEDIA_UNKNOWN:
 	mc.ShowDialogWait()
 	win.PushState()	
-	showurl = item.GetPath()
-	name = item.GetLabel()
-	items = util.getEpisodeListItems(name, util.fetchShowEpisodes(name, showurl))
+	show = util.Show()
+	show.path = item.GetPath()
+	show.name = item.GetLabel()
+	
+	items = util.getEpisodeListItems(show.name, util.getShowDataFromCache(show))
 	showlist.SetItems(items)
 	mc.LogDebug("checking if everything is there:")
 	items = showlist.GetItems()
