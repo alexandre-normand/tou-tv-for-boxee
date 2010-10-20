@@ -22,7 +22,7 @@ KEY_SUFFIX_EPISODE_SEASON = ".season"
 KEY_SUFFIX_EPISODE_NUMBER = ".number"
 SEPARATOR = "<itemseparator>"
 
-CACHE_LOCK = threading.Lock()
+CACHE_LOCK = threading.RLock()
 
 def initCache():
 	appConfig = mc.GetApp().GetLocalConfig()
@@ -66,6 +66,8 @@ def initCache():
 def updateShowListCache():
 	appConfig = mc.GetApp().GetLocalConfig()
 	shows = fetchShows()
+	appConfig.Reset(KEY_SHOWS)
+	
 	for show in shows:
 		appConfig.PushBackValue(KEY_SHOWS, show.name)
 		showPathKey = show.name + KEY_SUFFIX_SHOW_PATH
@@ -151,6 +153,7 @@ def updateShowDataCache(show):
 	try:
 		appConfig = mc.GetApp().GetLocalConfig()
 		episodes = fetchShowEpisodes(show)
+		clearShowDataCache(show)
 		key = show.name + KEY_SUFFIX_SHOW_BACKGROUND
 		appConfig.SetValue(key, show.backgroundUrl)
 		
@@ -192,7 +195,7 @@ def clearShowDataCache(show):
 	try:
 		key = show.name + KEY_SUFFIX_EPISODE_LIST
 		episodesString = appConfig.Implode(SEPARATOR, key)
-		log = "Episodes string: " + showsString
+		log = "Episodes string: " + episodesString
 		print log
 		
 		key = show.name + KEY_SUFFIX_SHOW_BACKGROUND
@@ -320,7 +323,7 @@ def fetchShowEpisodes(show):
 				episode.videoPath = playpath
 				episodes.append(episode)
 			else:
-				mc.LogError("skipping item with url " + showurl + ", videopagedefinition: " + videodef)
+				mc.LogError("skipping item with url " + show.path + ", videopagedefinition: " + videodef)
 	else:
 		desc, season, title, img = re.compile('toutv.mediaData.+?"description":"(.+?)".+?"seasonNumber":(.+?),.+?"title":"(.+?)".+?toutv.imageA=\'(.+?)\'').findall(showpage)[0]
 		p = re.compile("toutv.releaseUrl='(.+?)'")
