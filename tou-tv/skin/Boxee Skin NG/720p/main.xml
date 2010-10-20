@@ -10,11 +10,16 @@ mc.ShowDialogWait()
 util.initCache()
 shows = util.getShowsFromCache()
 shows.sort(key=operator.attrgetter('name'))
+
 items = util.getShowListItems(shows)
 window = mc.GetWindow(14000)
 window.GetList(120).SetItems(items)
 window.GetList(120).SetFocusedItem(0)
 mc.HideDialogWait()
+
+# Start pre-fetching for all shows
+prefetchingWorker = util.PreFetchingWorker(shows)
+prefetchingWorker.start()
 ]]></onload>
 	<controls>
 		<control type="image">

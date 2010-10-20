@@ -1,6 +1,7 @@
 import mc
 import re
 import time
+import threading
 
 TOU_TV_MEDIA_FLAG = 'toutv.mediaData'
 TOU_TV_BASE_URL = 'http://www.tou.tv'
@@ -20,6 +21,8 @@ KEY_SUFFIX_EPISODE_VIDEO_URL = ".videoUrl"
 KEY_SUFFIX_EPISODE_SEASON = ".season"
 KEY_SUFFIX_EPISODE_NUMBER = ".number"
 SEPARATOR = "<itemseparator>"
+
+CACHE_LOCK = threading.Lock()
 
 def initCache():
 	appConfig = mc.GetApp().GetLocalConfig()
@@ -142,70 +145,87 @@ def getEpisodeListItems(show, episodes):
 	return episodeItems
 	
 def updateShowDataCache(show):
-	appConfig = mc.GetApp().GetLocalConfig()
-	episodes = fetchShowEpisodes(show)
-	key = show.name + KEY_SUFFIX_SHOW_BACKGROUND
-	appConfig.SetValue(key, show.backgroundUrl)
-	
-	for episode in episodes:
-		key = show.name + KEY_SUFFIX_EPISODE_LIST
-		appConfig.PushBackValue(key, episode.videoPath)
-		key = episode.videoPath + KEY_SUFFIX_EPISODE_TITLE
-		appConfig.SetValue(key, episode.title)
-		key = episode.videoPath + KEY_SUFFIX_EPISODE_THUMBNAIL
-		appConfig.SetValue(key, episode.thumbnailUrl)
-		key = episode.videoPath + KEY_SUFFIX_EPISODE_DESCRIPTION
-		appConfig.SetValue(key, episode.description)
-		key = episode.videoPath + KEY_SUFFIX_EPISODE_VIDEO_URL
-		appConfig.SetValue(key, episode.videoUrl)
-		key = episode.videoPath + KEY_SUFFIX_EPISODE_SEASON
-		appConfig.SetValue(key, str(episode.season))
-		key = episode.videoPath + KEY_SUFFIX_EPISODE_NUMBER
-		appConfig.SetValue(key, str(episode.episode))
-	
-	lastUpdateTime = time.time()
-	key = show.name + KEY_SUFFIX_LAST_UPDATED
-	appConfig.SetValue(key, str(lastUpdateTime))
-	
-	log = "Updated list of episodes for show (" + show.name + ") and set episode list last update time to:" + str(lastUpdateTime)
+	log = "Acquiring lock to update show data cache (" + show.name + ")"
 	print log
+	CACHE_LOCK.acquire()
+	try:
+		appConfig = mc.GetApp().GetLocalConfig()
+		episodes = fetchShowEpisodes(show)
+		key = show.name + KEY_SUFFIX_SHOW_BACKGROUND
+		appConfig.SetValue(key, show.backgroundUrl)
+		
+		for episode in episodes:
+			key = show.name + KEY_SUFFIX_EPISODE_LIST
+			appConfig.PushBackValue(key, episode.videoPath)
+			key = episode.videoPath + KEY_SUFFIX_EPISODE_TITLE
+			appConfig.SetValue(key, episode.title)
+			key = episode.videoPath + KEY_SUFFIX_EPISODE_THUMBNAIL
+			appConfig.SetValue(key, episode.thumbnailUrl)
+			key = episode.videoPath + KEY_SUFFIX_EPISODE_DESCRIPTION
+			appConfig.SetValue(key, episode.description)
+			key = episode.videoPath + KEY_SUFFIX_EPISODE_VIDEO_URL
+			appConfig.SetValue(key, episode.videoUrl)
+			key = episode.videoPath + KEY_SUFFIX_EPISODE_SEASON
+			appConfig.SetValue(key, str(episode.season))
+			key = episode.videoPath + KEY_SUFFIX_EPISODE_NUMBER
+			appConfig.SetValue(key, str(episode.episode))
+		
+		lastUpdateTime = time.time()
+		key = show.name + KEY_SUFFIX_LAST_UPDATED
+		appConfig.SetValue(key, str(lastUpdateTime))
+		
+		log = "Updated list of episodes for show (" + show.name + ") and set episode list last update time to:" + str(lastUpdateTime)
+		print log
+	finally:
+		CACHE_LOCK.release()
+		log = "Releasing lock after update to show data cache (" + show.name + ")"
+		print log
 	return 1
 	
 def clearShowDataCache(show):
 	appConfig = mc.GetApp().GetLocalConfig()
-	key = show.name + KEY_SUFFIX_EPISODE_LIST
-	episodesString = appConfig.Implode(SEPARATOR, key)
-	log = "Episodes string: " + showsString
+	
+	log = "Acquiring lock to clear show data cache (" + show.name + ")"
 	print log
+	CACHE_LOCK.acquire()
 	
-	key = show.name + KEY_SUFFIX_SHOW_BACKGROUND
-	appConfig.Reset(key)
-	
-	episodes = []
-	if episodesString != "":
-		episodes = episodesString.split(SEPARATOR)
-		for videoPath in episodes:
-			key = videoPath + KEY_SUFFIX_EPISODE_TITLE
-			appConfig.Reset(key)
-			key = videoPath + KEY_SUFFIX_EPISODE_THUMBNAIL
-			appConfig.Reset(key)
-			key = videoPath + KEY_SUFFIX_EPISODE_DESCRIPTION
-			appConfig.Reset(key)
-			key = videoPath + KEY_SUFFIX_EPISODE_VIDEO_URL
-			appConfig.Reset(key)
-			key = videoPath + KEY_SUFFIX_EPISODE_SEASON
-			appConfig.Reset(key)
-			key = videoPath + KEY_SUFFIX_EPISODE_NUMBER
-			appConfig.Reset(key)
+	try:
 		key = show.name + KEY_SUFFIX_EPISODE_LIST
-		appConfig.Reset(key)
-		key = show.name + KEY_SUFFIX_LAST_UPDATED
-		appConfig.Reset(key)
-	else:
-		log = "Warning, no episode list found in cache, cache inconsistent"
+		episodesString = appConfig.Implode(SEPARATOR, key)
+		log = "Episodes string: " + showsString
 		print log
 		
-	log = "Clear show data from cache (" + show.name + ")"
+		key = show.name + KEY_SUFFIX_SHOW_BACKGROUND
+		appConfig.Reset(key)
+		
+		episodes = []
+		if episodesString != "":
+			episodes = episodesString.split(SEPARATOR)
+			for videoPath in episodes:
+				key = videoPath + KEY_SUFFIX_EPISODE_TITLE
+				appConfig.Reset(key)
+				key = videoPath + KEY_SUFFIX_EPISODE_THUMBNAIL
+				appConfig.Reset(key)
+				key = videoPath + KEY_SUFFIX_EPISODE_DESCRIPTION
+				appConfig.Reset(key)
+				key = videoPath + KEY_SUFFIX_EPISODE_VIDEO_URL
+				appConfig.Reset(key)
+				key = videoPath + KEY_SUFFIX_EPISODE_SEASON
+				appConfig.Reset(key)
+				key = videoPath + KEY_SUFFIX_EPISODE_NUMBER
+				appConfig.Reset(key)
+			key = show.name + KEY_SUFFIX_EPISODE_LIST
+			appConfig.Reset(key)
+			key = show.name + KEY_SUFFIX_LAST_UPDATED
+			appConfig.Reset(key)
+		else:
+			log = "Warning, no episode list found in cache, cache inconsistent"
+			print log
+	finally:
+		CACHE_LOCK.release()
+		log = "Releasing lock after clearing show data cache (" + show.name + ")"
+		print log
+	log = "Cleared show data from cache (" + show.name + ")"
 	print log
 	return 1
 	
@@ -303,15 +323,14 @@ def fetchShowEpisodes(show):
 				mc.LogError("skipping item with url " + showurl + ", videopagedefinition: " + videodef)
 	else:
 		desc, season, title, img = re.compile('toutv.mediaData.+?"description":"(.+?)".+?"seasonNumber":(.+?),.+?"title":"(.+?)".+?toutv.imageA=\'(.+?)\'').findall(showpage)[0]
-		videopageurl = TOU_TV_BASE_URL + showurl;
-		videopage = sg.Get(videopageurl)
 		p = re.compile("toutv.releaseUrl='(.+?)'")
-		pid = p.findall(videopage)
+		pid = p.findall(showpage)
 		definitionurl = "http://release.theplatform.com/content.select?pid=" + pid[0] + '&format=SMIL'
 		videodef = sg.Get(definitionurl)
 		rtmp_url = re.search('<meta base="rtmp:(.+?)"', videodef)
 		playurl = re.search('<ref src="mp4:(.+?)"', videodef)
 		if playurl: 
+			episode = Episode()
 			playpath = "mp4:" + playurl.group(1)
 			rtmpURL = "rtmp:" + rtmp_url.group(1)
 			episode.title = title
@@ -322,7 +341,7 @@ def fetchShowEpisodes(show):
 			episode.videoUrl = rtmpURL
 			episodes.append(episode)
 		else:
-			mc.LogError("skipping item with url " + showurl + ", videopagedefinition: " + videodef)
+			mc.LogError("skipping item with url " + show.path + ", videopagedefinition: " + videodef)
 	return episodes
 	
 class Episode:
@@ -352,3 +371,38 @@ class Show:
 		self.name = ""
 		self.path = ""
 		self.backgroundUrl = ""
+		
+class PreFetchingWorker(threading.Thread):
+	def __init__(self, shows):
+		self.shows = shows
+		threading.Thread.__init__(self)
+		
+	def run(self):
+		log = "[PreFetchWorker] Updating episodes for list of shows"
+		print log
+		
+		numberOfShowsUpdated = 0
+		
+		for show in self.shows:
+			appConfig = mc.GetApp().GetLocalConfig()
+			key = show.name + KEY_SUFFIX_LAST_UPDATED
+			lastUpdate = appConfig.GetValue(key)
+			
+			if lastUpdate == "":
+				numberOfShowsUpdated = numberOfShowsUpdated + 1
+				updateShowDataCache(show)
+			else:
+				expirationTime = float(lastUpdate) + DATA_EXPIRATION
+		
+				log = "[PreFetchWorker] Calculated expiration time for episodes is: " + str(expirationTime) + ", currentTime is: " + str(time.time())
+				print log
+		
+				if time.time() > expirationTime:
+					numberOfShowsUpdated = numberOfShowsUpdated + 1
+					updateShowDataCache(show)
+				else:
+					log = "[PreFetchWorker] List of episodes still valid, last updated: " + lastUpdate
+					print log
+			
+		log = "[PreFetchWorker] job is done, updated " + str(numberOfShowsUpdated) + " shows"
+		print log
