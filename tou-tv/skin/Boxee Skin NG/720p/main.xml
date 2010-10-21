@@ -18,8 +18,7 @@ window.GetList(120).SetFocusedItem(0)
 mc.HideDialogWait()
 
 # Start pre-fetching for all shows
-prefetchingWorker = util.PreFetchingWorker(shows)
-prefetchingWorker.start()
+util.PreFetchingWorker(shows).start()
 ]]></onload>
 	<controls>
 		<control type="image">
@@ -102,7 +101,7 @@ prefetchingWorker.start()
 						<height>30</height>
 						<align>left</align>
 						<font>sans28</font>
-						<label>$INFO[ListItem.tvshowtitle]: Saison $INFO[ListItem.season], $INFO[ListItem.title]</label>
+						<label>$INFO[ListItem.title] (S$INFO[ListItem.season]E$INFO[ListItem.episode])</label>
 						<visible>!IsEmpty(Container(120).Listitem.title)</visible>
 						<animation effect="fade" end="30" time="0" condition="true">Conditional</animation>
 					</control>
@@ -124,7 +123,7 @@ prefetchingWorker.start()
 						<height>30</height>
 						<align>left</align>
 						<font>sans28</font>
-						<label>$INFO[ListItem.tvshowtitle]: Saison $INFO[ListItem.season], $INFO[ListItem.title]</label>
+						<label>$INFO[ListItem.title] (S$INFO[ListItem.season]E$INFO[ListItem.episode])</label>
 						<textcolor>white</textcolor>
 						<scroll>true</scroll>
 			            <animation type="Focus">
@@ -159,9 +158,10 @@ prefetchingWorker.start()
 				</focusedlayout>
 				<content type="url" url="">
 					<onclick lang="python"><![CDATA[
+print "Got clicked"
 win = mc.GetActiveWindow()
 
-showlist = mc.GetActiveWindow().GetList(120)
+showlist = win.GetList(120)
 item = showlist.GetItem(showlist.GetFocusedItem())
 if item.GetMediaType() == mc.ListItem.MEDIA_UNKNOWN:
 	mc.ShowDialogWait()
