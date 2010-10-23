@@ -51,13 +51,6 @@ mc.HideDialogWait()
 				<label>Tou.tv</label>
 				<animation effect="fade" end="30" time="0" condition="true">Conditional</animation>
 			</control>
-			<control type="largeimage" id="101">
-				<posx>0</posx>
-				<posy>30</posy>
-				<width>1280</width>
-				<height>300</height>
-				<info>Container(120).Listitem.image[0]</info>
-			</control>
 			<control type="image">
 				<posy>5</posy>
 				<posx>1220</posx>
@@ -91,7 +84,7 @@ mc.HideDialogWait()
 		<control type="group">
 			<visible>!Container(120).IsLoading + !Container(120).IsEmpty</visible>
 			<posx>40</posx>
-			<posy>315</posy>
+			<posy>330</posy>
 			<control type="fixedlist" id="120">
 				<width>670</width>
 				<height>395</height>
