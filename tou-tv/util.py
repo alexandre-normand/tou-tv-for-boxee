@@ -156,9 +156,10 @@ def getEpisodeListItems(show, episodes):
 	episodeItems = mc.ListItems()
 	for episode in episodes:
 		episodeItem = mc.ListItem(mc.ListItem.MEDIA_VIDEO_EPISODE)
+		episodeItem.SetImage(0, show.backgroundUrl)
 		episodeItem.SetLabel(episode.title)
 		episodeItem.SetSeason(episode.season)
-		episodeItem.SetTVShowTitle(show)
+		episodeItem.SetTVShowTitle(show.name)
 		episodeItem.SetDescription(episode.description)
 		episodeItem.SetThumbnail(episode.thumbnailUrl)
 		episodeItem.SetTitle(episode.title)
@@ -169,7 +170,7 @@ def getEpisodeListItems(show, episodes):
 		
 	return episodeItems
 	
-def updateShowDataCache(show):
+def updateShowDataCache(show, appConfig):
 	# Waiting for master lock
 	log = "Waiting for Master lock to update show data cache..."
 	print log
@@ -184,9 +185,8 @@ def updateShowDataCache(show):
 		MASTER_LOCK.release()
 		
 	try:
-		appConfig = mc.GetApp().GetLocalConfig()
 		episodes = fetchShowEpisodes(show)
-		clearShowDataCache(show)
+		clearShowDataCache(show, appConfig)
 		key = show.name + KEY_SUFFIX_SHOW_BACKGROUND
 		appConfig.SetValue(key, show.backgroundUrl)
 		
@@ -218,11 +218,9 @@ def updateShowDataCache(show):
 		print log
 	return 1
 	
-def clearShowDataCache(show):
-	appConfig = mc.GetApp().GetLocalConfig()
-	
+def clearShowDataCache(show, appConfig):
 	# Waiting for master lock
-	log = "Waiting for Master lock to cleaer show data cache..."
+	log = "Waiting for Master lock to clear show data cache..."
 	print log
 	MASTER_LOCK.acquire()
 	try:
@@ -295,7 +293,7 @@ def getShowDataFromCache(show):
 		lastUpdate = appConfig.GetValue(key)
 		
 		if lastUpdate == "":
-			updateShowDataCache(show)
+			updateShowDataCache(show, appConfig)
 		else:
 			expirationTime = float(lastUpdate) + DATA_EXPIRATION
 			
@@ -303,7 +301,7 @@ def getShowDataFromCache(show):
 			print log
 			
 			if time.time() > expirationTime:
-				updateShowDataCache(show)
+				updateShowDataCache(show, appConfig)
 			else:
 				log = "List of episodes still valid, last updated: " + lastUpdate
 				print log
@@ -355,9 +353,18 @@ def fetchShowEpisodes(show):
 	print log
 	sg = mc.Http()	
 	showpage = sg.Get(show.path)
+	background = re.search('background-image:url\(.*http://(.+)\&.*\)', showpage)
+	if background is not None:
+		show.backgroundUrl = "http://" + background.group(1)
+		#localpath = mc.GetTempDir() + show.name + ".jpg"
+		#show.backgroundUrl = localpath
+		#sg.Download(backgroundurl, localpath)
+		log = "Background url found with local path " + show.backgroundUrl
+		print log
+	
 	episodes = []
 	if TOU_TV_MEDIA_FLAG not in showpage:
-		info = re.compile('<img id=".+?" src="(.+?)".+?class="saison">(.+?)</p>.+?class="episode".+?href="(.+?)".+?<b>(.+?)(&nbsp;)*?</b>.+?<p>(.+?)</p>', re.DOTALL).findall(showpage)
+		info = re.compile('<img id=".+?Details" src="(.+?)".+?class="saison">(.+?)</p>.+?class="episode".+?href="(.+?)".+?<b>(.+?)(&nbsp;)*?</b>.+?<p>(.+?)</p>', re.DOTALL).findall(showpage)
 		log = "loading " + show.name + "..."
 		print log
 		for img, saison, urlvideo, title, trash, desc in info:
@@ -446,21 +453,21 @@ class PreFetchingWorker(threading.Thread):
 	def __init__(self, shows):
 		self.shows = shows
 		threading.Thread.__init__(self, name="PreFetchingWorker-Thread")
-		
+	
 	def run(self):
 		log = "[PreFetchWorker] Updating episodes for list of shows"
 		print log
 		
 		numberOfShowsUpdated = 0
+		appConfig = mc.GetApp().GetLocalConfig()
 		
 		for show in self.shows:
-			appConfig = mc.GetApp().GetLocalConfig()
 			key = show.name + KEY_SUFFIX_LAST_UPDATED
 			lastUpdate = appConfig.GetValue(key)
 			
 			if lastUpdate == "":
 				numberOfShowsUpdated = numberOfShowsUpdated + 1
-				updateShowDataCache(show)
+				updateShowDataCache(show, appConfig)
 			else:
 				expirationTime = float(lastUpdate) + DATA_EXPIRATION
 		
@@ -469,7 +476,7 @@ class PreFetchingWorker(threading.Thread):
 		
 				if time.time() > expirationTime:
 					numberOfShowsUpdated = numberOfShowsUpdated + 1
-					updateShowDataCache(show)
+					updateShowDataCache(show, appConfig)
 				else:
 					log = "[PreFetchWorker] List of episodes still valid, last updated: " + lastUpdate
 					print log

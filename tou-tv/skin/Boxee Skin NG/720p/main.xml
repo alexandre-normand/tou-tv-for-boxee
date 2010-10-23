@@ -13,12 +13,14 @@ shows.sort(key=operator.attrgetter('name'))
 
 items = util.getShowListItems(shows)
 window = mc.GetWindow(14000)
-window.GetList(120).SetItems(items)
-window.GetList(120).SetFocusedItem(0)
+itemlist = window.GetList(120)
+itemlist.SetItems(items)
+itemlist.SetFocusedItem(0)
 mc.HideDialogWait()
 
 # Start pre-fetching for all shows
-util.PreFetchingWorker(shows).start()
+#util.PreFetchingWorker(shows).start()
+#print "Process started"
 ]]></onload>
 	<controls>
 		<control type="image">
@@ -46,8 +48,15 @@ util.PreFetchingWorker(shows).start()
 				<height>50</height>
 				<align>left</align>
 				<font>sans23b</font>
-				<label>Émissions tou.tv</label>
+				<label>Tou.tv</label>
 				<animation effect="fade" end="30" time="0" condition="true">Conditional</animation>
+			</control>
+			<control type="largeimage" id="101">
+				<posx>0</posx>
+				<posy>30</posy>
+				<width>1280</width>
+				<height>300</height>
+				<info>Container(120).Listitem.image[0]</info>
 			</control>
 			<control type="image">
 				<posy>5</posy>
@@ -82,10 +91,10 @@ util.PreFetchingWorker(shows).start()
 		<control type="group">
 			<visible>!Container(120).IsLoading + !Container(120).IsEmpty</visible>
 			<posx>40</posx>
-			<posy>288</posy>
+			<posy>315</posy>
 			<control type="fixedlist" id="120">
 				<width>670</width>
-				<height>418</height>
+				<height>395</height>
 				<onup>-</onup>
 				<ondown>-</ondown>
 				<onleft>-</onleft>
@@ -160,23 +169,21 @@ util.PreFetchingWorker(shows).start()
 					<onclick lang="python"><![CDATA[
 print "Got clicked"
 win = mc.GetActiveWindow()
-
-showlist = win.GetList(120)
-item = showlist.GetItem(showlist.GetFocusedItem())
+itemlist = win.GetList(120)
+item = itemlist.GetItem(itemlist.GetFocusedItem())
 if item.GetMediaType() == mc.ListItem.MEDIA_UNKNOWN:
 	mc.ShowDialogWait()
 	win.PushState()	
 	show = util.Show()
 	show.path = item.GetPath()
 	show.name = item.GetLabel()
-	
-	items = util.getEpisodeListItems(show.name, util.getShowDataFromCache(show))
-	showlist.SetItems(items)
+	items = util.getEpisodeListItems(show, util.getShowDataFromCache(show))
+	itemlist.SetItems(items)
 	mc.LogDebug("checking if everything is there:")
-	items = showlist.GetItems()
+	items = itemlist.GetItems()
 	for item in items:
 		mc.LogDebug("label:" + item.GetLabel() + ", path:" + item.GetPath() + ", thumb:" + item.GetThumbnail() + ", title: " + item.GetTitle())
-	showlist.SetFocusedItem(0)
+	itemlist.SetFocusedItem(0)
 	mc.HideDialogWait()
 else:
 	win.PushState()
