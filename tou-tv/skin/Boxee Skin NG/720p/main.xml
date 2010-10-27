@@ -7,15 +7,26 @@ import re
 import util
 import operator
 mc.ShowDialogWait()
-util.initCache()
-shows = util.getShowsFromCache()
-shows.sort(key=operator.attrgetter('name'))
 
-items = util.getShowListItems(shows)
 window = mc.GetWindow(14000)
 itemlist = window.GetList(120)
-itemlist.SetItems(items)
-itemlist.SetFocusedItem(0)
+
+# make sure app has not been loaded yet
+if not itemlist.GetItems():
+	log = "App is NOT initialized...loading..."
+	print log
+	
+	util.initCache()
+	
+	shows = util.getShowsFromCache()
+	shows.sort(key=operator.attrgetter('name'))
+	
+	items = util.getShowListItems(shows)
+	itemlist.SetItems(items)
+	itemlist.SetFocusedItem(0)
+else:
+	log = "App has already been loaded, skipping..."
+	print log
 mc.HideDialogWait()
 
 # Start pre-fetching for all shows
@@ -179,7 +190,7 @@ if item.GetMediaType() == mc.ListItem.MEDIA_UNKNOWN:
 	itemlist.SetFocusedItem(0)
 	mc.HideDialogWait()
 else:
-	win.PushState()
+#	win.PushState()
 	mc.GetPlayer().PlayWithActionMenu(item)
 ]]></onclick>
 				</content>
