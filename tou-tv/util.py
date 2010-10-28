@@ -385,6 +385,10 @@ def fetchShowEpisodes(show):
 				authpath = re.search('auth=(.*)&', rtmpURL)
 				episode.videoUrl = rtmpURL
 				episode.thumbnailUrl = img
+				#realtitle = re.search('(?:Épisode \d+ [:] )?(.*)+', title)
+				#if (len(realtitle.groups()) < 2):
+				#	episode.title = realtitle.group(2)
+				#else:
 				episode.title = title
 				seasonValues = re.search('(\d+)', saison)
 				if seasonValues is not None:
