@@ -19,7 +19,7 @@ if not itemlist.GetItems():
 	util.initCache()
 	
 	shows = util.getShowsFromCache()
-	shows.sort(key=operator.attrgetter('name'))
+	shows = sorted(shows, key=operator.attrgetter('name'))
 	
 	items = util.getShowListItems(shows)
 	itemlist.SetItems(items)
@@ -71,7 +71,7 @@ mc.HideDialogWait()
 				<font>sans28</font>
 				<label>[B]tou.tv[/B]</label>
 				<animation effect="fade" end="30" time="0" condition="true">Conditional</animation>
-			</control>
+			</control>					
 		</control>
 		<!--<control type="group">
 			<control type="image">
@@ -177,7 +177,10 @@ if item.GetMediaType() == mc.ListItem.MEDIA_UNKNOWN:
 	show = util.Show()
 	show.path = item.GetPath()
 	show.name = item.GetLabel()
-	items = util.getEpisodeListItems(show, util.getShowDataFromCache(show))
+	episodes = util.getShowDataFromCache(show)
+	sorted_episodes = sorted(episodes, key=operator.attrgetter('episode'), reverse=True)
+	sorted_seasons = sorted(sorted_episodes, key=operator.attrgetter('season'), reverse=True)	
+	items = util.getEpisodeListItems(show, sorted_seasons)
 	itemlist.SetItems(items)
 	mc.LogDebug("checking if everything is there:")
 	items = itemlist.GetItems()
@@ -206,6 +209,17 @@ else:
 				<info>Container(120).Listitem.thumb</info>
 			</control>	
 		</control>
+		<control type="label">
+			<posx>24</posx>
+			<posy>65</posy>
+			<width>670</width>
+			<height>100</height>
+			<align>left</align>
+			<textcolor>BBE21F26</textcolor>
+			<font>sans28</font>
+			<label>[B]$INFO[Container(120).Listitem.tvshowtitle][/B]</label>
+			<visible>!IsEmpty(Container(120).Listitem.tvshowtitle)</visible>
+		</control>		
 		<control type="group">
 			<posy>272</posy>
 			<posx>840</posx>
@@ -231,7 +245,7 @@ else:
 				<width>1280</width>
 				<height>720</height>
 				<texture>black.png</texture>
-			</control>
+			</control>			
 		</control>
 	</controls>
 </window>
