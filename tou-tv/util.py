@@ -73,6 +73,9 @@ def updateShowListCache():
 	print log
 	MASTER_LOCK.acquire()
 	try:
+		# Workaround for reset just removing the first entry for that key instead of clearing all 
+		# stacked values
+		appConfig.SetValue(KEY_SHOWS, "")
 		appConfig.Reset(KEY_SHOWS)
 		
 		for show in shows:
@@ -165,6 +168,7 @@ def getEpisodeListItems(show, episodes):
 		episodeItem.SetTitle(episode.title)
 		episodeItem.SetPath(episode.videoUrl)
 		episodeItem.SetProperty("PlayPath", episode.videoPath)
+		episodeItem.SetProperty("show.path", show.path)
 		episodeItem.SetEpisode(episode.episode)
 		episodeItems.append(episodeItem)
 		
@@ -258,6 +262,9 @@ def clearShowDataCache(show, appConfig):
 				key = videoPath + KEY_SUFFIX_EPISODE_NUMBER
 				appConfig.Reset(key)
 			key = show.name + KEY_SUFFIX_EPISODE_LIST
+			# Workaround for reset just removing the first entry for that key instead of clearing all 
+			# stacked values
+			appConfig.SetValue(key, "")
 			appConfig.Reset(key)
 			key = show.name + KEY_SUFFIX_LAST_UPDATED
 			appConfig.Reset(key)

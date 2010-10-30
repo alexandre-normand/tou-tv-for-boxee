@@ -71,7 +71,62 @@ mc.HideDialogWait()
 				<font>sans28</font>
 				<label>[B]tou.tv[/B]</label>
 				<animation effect="fade" end="30" time="0" condition="true">Conditional</animation>
-			</control>					
+			</control>
+			<control type="button" id="300">
+				<description>refresh</description>
+				<posx>1100</posx>
+				<posy>680</posy>
+				<width>120</width>
+				<height>60</height>
+				<align>center</align>
+				<onleft>120</onleft>
+				<textcolor>BBFFFFFF</textcolor>
+				<texturefocus>buttonfocused.png</texturefocus>
+				<texturenofocus>button.png</texturenofocus>
+				<colordiffuse>BBE21F26</colordiffuse>
+				<disabledcolor>88FFFFFF</disabledcolor>
+				<font>sans21</font>
+				<label>Rafraîchir</label>
+				<onclick lang="python">
+				<![CDATA[
+print "Refresh clicked"
+win = mc.GetActiveWindow()
+itemlist = win.GetList(120)
+update = "shows"
+if itemlist and itemlist.GetItem(0).GetMediaType() == mc.ListItem.MEDIA_VIDEO_EPISODE:
+	mc.ShowDialogWait()	
+	item = itemlist.GetItem(0)
+	show = util.Show()
+	show.name = item.GetTVShowTitle()
+	show.path = item.GetProperty("show.path")
+	appConfig = mc.GetApp().GetLocalConfig()
+	util.updateShowDataCache(show, appConfig)
+	
+	episodes = util.getShowDataFromCache(show)
+	sorted_episodes = sorted(episodes, key=operator.attrgetter('episode'), reverse=True)
+	sorted_seasons = sorted(sorted_episodes, key=operator.attrgetter('season'), reverse=True)	
+	items = util.getEpisodeListItems(show, sorted_seasons)
+	itemlist.SetItems(items)
+	itemlist.SetFocusedItem(0)
+	mc.HideDialogWait()
+else:
+	mc.ShowDialogWait()	
+	util.updateShowListCache()
+	
+	shows = util.getShowsFromCache()
+	shows = sorted(shows, key=operator.attrgetter('name'))
+	
+	for show in shows:
+		log = "name:" + show.name + ", path:" + show.path 
+		print log
+	
+	items = util.getShowListItems(shows)
+	itemlist.SetItems(items)
+	itemlist.SetFocusedItem(0)
+	mc.HideDialogWait()
+win.GetControl(120).SetFocus()
+]]></onclick>
+			</control>
 		</control>
 		<!--<control type="group">
 			<control type="image">
@@ -98,7 +153,7 @@ mc.HideDialogWait()
 				<onup>-</onup>
 				<ondown>-</ondown>
 				<onleft>-</onleft>
-				<onright>-</onright>
+				<onright>300</onright>
 				<scrolltime>200</scrolltime>
 				<pagecontrol>60</pagecontrol>
 				<focusposition>3</focusposition>
