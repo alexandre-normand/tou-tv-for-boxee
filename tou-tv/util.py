@@ -405,9 +405,10 @@ def fetchShowEpisodes(show):
 					episode.episode = int(episodeValues.group(1))
 				episode.description = desc
 				episode.videoPath = playpath
-				episodes.append(episode)
+				episodes.append(episode)	
 			else:
 				mc.LogError("skipping item with url " + show.path + ", videopagedefinition: " + videodef)
+			time.sleep(0)
 	else:
 		desc, episodeNumber, season, title, img = re.compile('toutv.mediaData.+?"description":"(.+?)".+?"episodeNumber":(\d+).+?"seasonNumber":(.+?),.+?"title":"(.+?)".+?toutv.imageA=\'(.+?)\'').findall(showpage)[0]
 		p = re.compile("toutv.releaseUrl='(.+?)'")
@@ -430,6 +431,7 @@ def fetchShowEpisodes(show):
 			episodes.append(episode)
 		else:
 			mc.LogError("skipping item with url " + show.path + ", videopagedefinition: " + videodef)
+		time.sleep(0)
 	return episodes
 	
 class Episode:

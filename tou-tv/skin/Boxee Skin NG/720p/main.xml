@@ -149,16 +149,16 @@ win.GetControl(120).SetFocus()
 			<posy>125</posy>
 			<control type="fixedlist" id="120">
 				<width>670</width>
-				<height>500</height>
+				<height>520</height>
 				<onup>-</onup>
 				<ondown>-</ondown>
 				<onleft>-</onleft>
 				<onright>300</onright>
 				<scrolltime>200</scrolltime>
 				<pagecontrol>60</pagecontrol>
-				<focusposition>3</focusposition>
+				<focusposition>2</focusposition>
 				<orientation>vertical</orientation>
-				<itemlayout width="630" height="46">
+				<itemlayout width="670" height="46">
 					<control type="label">
 						<posx>40</posx>
 						<width>670</width>
@@ -175,12 +175,12 @@ win.GetControl(120).SetFocus()
 						<height>30</height>
 						<align>left</align>
 						<font>sans28</font>
-						<info>Listitem.Label</info>
+						<label>$INFO[ListItem.Label]</label>
 						<visible>IsEmpty(Container(120).Listitem.title)</visible>
 						<animation effect="fade" end="30" time="0" condition="true">Conditional</animation>
 					</control>
 				</itemlayout>
-				<focusedlayout width="630" height="50">
+				<focusedlayout width="670" height="50">
 					<control type="label" id="5656">
 						<posx>40</posx>
 						<width>670</width>
