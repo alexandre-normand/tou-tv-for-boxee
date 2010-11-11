@@ -244,6 +244,9 @@ if item.GetMediaType() == mc.ListItem.MEDIA_UNKNOWN:
 	itemlist.SetFocusedItem(0)
 	mc.HideDialogWait()
 else:
+	mc.ShowDialogWait()	
+	util.addVideoDataToItem(item)
+	mc.HideDialogWait()	
 	mc.GetPlayer().PlayWithActionMenu(item)
 ]]></onclick>
 				</content>

@@ -166,8 +166,9 @@ def getEpisodeListItems(show, episodes):
 		episodeItem.SetDescription(episode.description)
 		episodeItem.SetThumbnail(episode.thumbnailUrl)
 		episodeItem.SetTitle(episode.title)
-		episodeItem.SetPath(episode.videoUrl)
-		episodeItem.SetProperty("PlayPath", episode.videoPath)
+		episodeItem.SetProperty("EpisodePage", episode.episodePage)
+		#episodeItem.SetPath(episode.videoUrl)
+		#episodeItem.SetProperty("PlayPath", episode.videoPath)
 		episodeItem.SetProperty("show.path", show.path)
 		episodeItem.SetEpisode(episode.episode)
 		episodeItems.append(episodeItem)
@@ -196,18 +197,19 @@ def updateShowDataCache(show, appConfig):
 		
 		for episode in episodes:
 			key = show.name + KEY_SUFFIX_EPISODE_LIST
-			appConfig.PushBackValue(key, episode.videoPath)
-			key = episode.videoPath + KEY_SUFFIX_EPISODE_TITLE
+			# TODO: store either episodePage or definitionUrl depending on what we have, maybe store a flag to know which case it is. some shows are broken because of this
+			appConfig.PushBackValue(key, episode.episodePage)
+			key = episode.episodePage + KEY_SUFFIX_EPISODE_TITLE
 			appConfig.SetValue(key, episode.title)
-			key = episode.videoPath + KEY_SUFFIX_EPISODE_THUMBNAIL
+			key = episode.episodePage + KEY_SUFFIX_EPISODE_THUMBNAIL
 			appConfig.SetValue(key, episode.thumbnailUrl)
-			key = episode.videoPath + KEY_SUFFIX_EPISODE_DESCRIPTION
+			key = episode.episodePage + KEY_SUFFIX_EPISODE_DESCRIPTION
 			appConfig.SetValue(key, episode.description)
-			key = episode.videoPath + KEY_SUFFIX_EPISODE_VIDEO_URL
-			appConfig.SetValue(key, episode.videoUrl)
-			key = episode.videoPath + KEY_SUFFIX_EPISODE_SEASON
+			#key = episode.episodePage + KEY_SUFFIX_EPISODE_VIDEO_URL
+			#appConfig.SetValue(key, episode.videoUrl)
+			key = episode.episodePage + KEY_SUFFIX_EPISODE_SEASON
 			appConfig.SetValue(key, str(episode.season))
-			key = episode.videoPath + KEY_SUFFIX_EPISODE_NUMBER
+			key = episode.episodePage + KEY_SUFFIX_EPISODE_NUMBER
 			appConfig.SetValue(key, str(episode.episode))
 		
 		lastUpdateTime = time.time()
@@ -248,18 +250,18 @@ def clearShowDataCache(show, appConfig):
 		episodes = []
 		if episodesString != "":
 			episodes = episodesString.split(SEPARATOR)
-			for videoPath in episodes:
-				key = videoPath + KEY_SUFFIX_EPISODE_TITLE
+			for episodePage in episodes:
+				key = episodePage + KEY_SUFFIX_EPISODE_TITLE
 				appConfig.Reset(key)
-				key = videoPath + KEY_SUFFIX_EPISODE_THUMBNAIL
+				key = episodePage + KEY_SUFFIX_EPISODE_THUMBNAIL
 				appConfig.Reset(key)
-				key = videoPath + KEY_SUFFIX_EPISODE_DESCRIPTION
+				key = episodePage + KEY_SUFFIX_EPISODE_DESCRIPTION
 				appConfig.Reset(key)
-				key = videoPath + KEY_SUFFIX_EPISODE_VIDEO_URL
+				#key = episodePage + KEY_SUFFIX_EPISODE_VIDEO_URL
+				#appConfig.Reset(key)
+				key = episodePage + KEY_SUFFIX_EPISODE_SEASON
 				appConfig.Reset(key)
-				key = videoPath + KEY_SUFFIX_EPISODE_SEASON
-				appConfig.Reset(key)
-				key = videoPath + KEY_SUFFIX_EPISODE_NUMBER
+				key = episodePage + KEY_SUFFIX_EPISODE_NUMBER
 				appConfig.Reset(key)
 			key = show.name + KEY_SUFFIX_EPISODE_LIST
 			# Workaround for reset just removing the first entry for that key instead of clearing all 
@@ -323,23 +325,23 @@ def getShowDataFromCache(show):
 		
 		episodes = []
 		if episodesString != "":
-			videoPaths = episodesString.split(SEPARATOR)
-			for videoPath in videoPaths:
+			episodePages = episodesString.split(SEPARATOR)
+			for episodePage in episodePages:
 				episode = Episode()
-				episode.videoPath = videoPath
-				log = "parsing cache data for episode: " + str(videoPath)
+				episode.episodePage = episodePage
+				log = "parsing cache data for episode: " + str(episodePage)
 				print log
-				key = videoPath + KEY_SUFFIX_EPISODE_TITLE
+				key = episodePage + KEY_SUFFIX_EPISODE_TITLE
 				episode.title = appConfig.GetValue(key)
-				key = videoPath + KEY_SUFFIX_EPISODE_THUMBNAIL
+				key = episodePage + KEY_SUFFIX_EPISODE_THUMBNAIL
 				episode.thumbnailUrl = appConfig.GetValue(key)
-				key = videoPath + KEY_SUFFIX_EPISODE_DESCRIPTION
+				key = episodePage + KEY_SUFFIX_EPISODE_DESCRIPTION
 				episode.description = appConfig.GetValue(key)
-				key = videoPath + KEY_SUFFIX_EPISODE_VIDEO_URL
-				episode.videoUrl = appConfig.GetValue(key)
-				key = videoPath + KEY_SUFFIX_EPISODE_SEASON
+				#key = episodePage + KEY_SUFFIX_EPISODE_VIDEO_URL
+				#episode.videoUrl = appConfig.GetValue(key)
+				key = episodePage + KEY_SUFFIX_EPISODE_SEASON
 				episode.season = int(appConfig.GetValue(key))
-				key = videoPath + KEY_SUFFIX_EPISODE_NUMBER
+				key = episodePage + KEY_SUFFIX_EPISODE_NUMBER
 				episode.episode = int(appConfig.GetValue(key))
 				episodes.append(episode)
 		else:
@@ -376,70 +378,78 @@ def fetchShowEpisodes(show):
 		print log
 		for img, saison, urlvideo, title, trash, desc in info:
 			videopageurl = TOU_TV_BASE_URL + urlvideo;
-			log = "Interpreting video page at url " + videopageurl
-			print log
-			videopage = sg.Get(videopageurl)
-			p = re.compile("toutv.releaseUrl='(.+?)'")
-			pid = p.findall(videopage)
-			definitionurl = "http://release.theplatform.com/content.select?pid=" + pid[0] + '&format=SMIL'
-			videodef = sg.Get(definitionurl)
-			rtmp_url = re.search('<meta base="rtmp:(.+?)"', videodef)
-			playurl = re.search('<ref src="mp4:(.+?)"', videodef)
-			if playurl: 
-				episode = Episode()
-				playpath = "mp4:" + playurl.group(1)
-				rtmpURL = "rtmp:" + rtmp_url.group(1)
-				authpath = re.search('auth=(.*)&', rtmpURL)
-				episode.videoUrl = rtmpURL
-				episode.thumbnailUrl = img
-				realtitle = re.search('(?:Épisode\s(?:\d+)\s:\s)?(.*)', title)
-				if not realtitle:
-					episode.title = title
-				else:
-					episode.title = realtitle.group(1)
-				seasonValues = re.search('(\d+)', saison)
-				if seasonValues is not None:
-					episode.season = int(seasonValues.group(1))
-				episodeValues = re.search('pisode (\d+)', title)
-				if episodeValues is not None:
-					episode.episode = int(episodeValues.group(1))
-				episode.description = desc
-				episode.videoPath = playpath
-				episodes.append(episode)	
+			episode = Episode()
+			episode.episodePage = videopageurl
+			episode.definitionUrl = ""
+			episode.thumbnailUrl = img
+			realtitle = re.search('(?:Épisode\s(?:\d+)\s:\s)?(.*)', title)
+			if not realtitle:
+				episode.title = title
 			else:
-				mc.LogError("skipping item with url " + show.path + ", videopagedefinition: " + videodef)
-			time.sleep(0)
+				episode.title = realtitle.group(1)
+			seasonValues = re.search('(\d+)', saison)
+			if seasonValues is not None:
+				episode.season = int(seasonValues.group(1))
+			episodeValues = re.search('pisode (\d+)', title)
+			if episodeValues is not None:
+				episode.episode = int(episodeValues.group(1))
+			episode.description = desc
+			episodes.append(episode)
 	else:
 		desc, episodeNumber, season, title, img = re.compile('toutv.mediaData.+?"description":"(.+?)".+?"episodeNumber":(\d+).+?"seasonNumber":(.+?),.+?"title":"(.+?)".+?toutv.imageA=\'(.+?)\'').findall(showpage)[0]
 		p = re.compile("toutv.releaseUrl='(.+?)'")
 		pid = p.findall(showpage)
 		definitionurl = "http://release.theplatform.com/content.select?pid=" + pid[0] + '&format=SMIL'
-		videodef = sg.Get(definitionurl)
-		rtmp_url = re.search('<meta base="rtmp:(.+?)"', videodef)
-		playurl = re.search('<ref src="mp4:(.+?)"', videodef)
-		if playurl: 
-			episode = Episode()
-			playpath = "mp4:" + playurl.group(1)
-			rtmpURL = "rtmp:" + rtmp_url.group(1)
-			episode.title = title
-			episode.description = desc
-			episode.season = int(season)
-			episode.episode = int(episodeNumber)
-			episode.thumbnailUrl = img
-			episode.videoPath = playpath
-			episode.videoUrl = rtmpURL
-			episodes.append(episode)
-		else:
-			mc.LogError("skipping item with url " + show.path + ", videopagedefinition: " + videodef)
-		time.sleep(0)
+		episode = Episode()
+		episode.title = title
+		episode.description = desc
+		episode.season = int(season)
+		episode.episode = int(episodeNumber)
+		episode.thumbnailUrl = img
+		episode.episodePage = ""
+		episode.definitionUrl = definitionUrl
+		episodes.append(episode)
 	return episodes
+
+def addVideoDataToItem(episodeItem):
+	sg = mc.Http()
+	definitionUrl = ""
+	if (len(episodeItem.GetProperty("definitionUrl")) > 0):
+		definitionUrl = episodeItem.GetProperty("definitionUrl")
+	else:
+		videopageurl = episodeItem.GetProperty("episodePage")
+		log = "Interpreting video page at url " + videopageurl
+		print log
+		videopage = sg.Get(videopageurl)
+		p = re.compile("toutv.releaseUrl='(.+?)'")
+		pid = p.findall(videopage)
+		definitionUrl = "http://release.theplatform.com/content.select?pid=" + pid[0] + '&format=SMIL'
 	
+	return fetchVideoDataToItem(episodeItem, definitionUrl, sg)
+	
+def fetchVideoDataToItem(episodeItem, definitionurl, sg):
+	videodef = sg.Get(definitionurl)
+	rtmp_url = re.search('<meta base="rtmp:(.+?)"', videodef)
+	playurl = re.search('<ref src="mp4:(.+?)"', videodef)
+	if playurl: 
+		playpath = "mp4:" + playurl.group(1)
+		rtmpURL = "rtmp:" + rtmp_url.group(1)
+		authpath = re.search('auth=(.*)&', rtmpURL)
+		episodeItem.SetPath(rtmpURL)
+		episodeItem.SetProperty("PlayPath", playpath)
+	else:
+		mc.LogError("skipping item with url " + show.path + ", videopagedefinition: " + videodef)
+	return episodeItem
+	
+
 class Episode:
 	title = ""
 	thumbnailUrl = ""
 	description = ""
 	videoUrl = ""
 	videoPath = ""
+	episodePage = ""
+	definitionUrl = ""
 	season = 0
 	episode = 0
 	
@@ -449,6 +459,8 @@ class Episode:
 		self.description = ""
 		self.videoUrl = ""
 		self.videoPath = ""
+		self.episodePage = ""
+		self.definitionUrl = ""
 		self.season = 0
 		self.episode = 0
 
