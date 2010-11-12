@@ -20,6 +20,7 @@ KEY_SUFFIX_EPISODE_DESCRIPTION = ".description"
 KEY_SUFFIX_EPISODE_VIDEO_URL = ".videoUrl"
 KEY_SUFFIX_EPISODE_SEASON = ".season"
 KEY_SUFFIX_EPISODE_NUMBER = ".number"
+KEY_SUFFIX_EPISODE_DOES_DETAIL_URL_INCLUDE_DATA = ".doesDetailUrlIncludeData"
 SEPARATOR = "<itemseparator>"
 
 locks = dict()
@@ -166,8 +167,9 @@ def getEpisodeListItems(show, episodes):
 		episodeItem.SetDescription(episode.description)
 		episodeItem.SetThumbnail(episode.thumbnailUrl)
 		episodeItem.SetTitle(episode.title)
-		episodeItem.SetProperty("EpisodePage", episode.episodePage)
-		#episodeItem.SetPath(episode.videoUrl)
+		episodeItem.SetProperty("DetailUrl", episode.detailUrl)
+		episodeItem.SetProperty("DoesDetailUrlIncludeData", episode.doesDetailUrlIncludeData)
+		episodeItem.SetPath("http://dummy.com/")
 		#episodeItem.SetProperty("PlayPath", episode.videoPath)
 		episodeItem.SetProperty("show.path", show.path)
 		episodeItem.SetEpisode(episode.episode)
@@ -197,19 +199,20 @@ def updateShowDataCache(show, appConfig):
 		
 		for episode in episodes:
 			key = show.name + KEY_SUFFIX_EPISODE_LIST
-			# TODO: store either episodePage or definitionUrl depending on what we have, maybe store a flag to know which case it is. some shows are broken because of this
-			appConfig.PushBackValue(key, episode.episodePage)
-			key = episode.episodePage + KEY_SUFFIX_EPISODE_TITLE
+			appConfig.PushBackValue(key, episode.detailUrl)
+			key = episode.detailUrl + KEY_SUFFIX_EPISODE_TITLE
 			appConfig.SetValue(key, episode.title)
-			key = episode.episodePage + KEY_SUFFIX_EPISODE_THUMBNAIL
+			key = episode.detailUrl + KEY_SUFFIX_EPISODE_DOES_DETAIL_URL_INCLUDE_DATA
+			appConfig.SetValue(key, episode.doesDetailUrlIncludeData)
+			key = episode.detailUrl + KEY_SUFFIX_EPISODE_THUMBNAIL
 			appConfig.SetValue(key, episode.thumbnailUrl)
-			key = episode.episodePage + KEY_SUFFIX_EPISODE_DESCRIPTION
+			key = episode.detailUrl + KEY_SUFFIX_EPISODE_DESCRIPTION
 			appConfig.SetValue(key, episode.description)
-			#key = episode.episodePage + KEY_SUFFIX_EPISODE_VIDEO_URL
+			#key = episode.detailUrl + KEY_SUFFIX_EPISODE_VIDEO_URL
 			#appConfig.SetValue(key, episode.videoUrl)
-			key = episode.episodePage + KEY_SUFFIX_EPISODE_SEASON
+			key = episode.detailUrl + KEY_SUFFIX_EPISODE_SEASON
 			appConfig.SetValue(key, str(episode.season))
-			key = episode.episodePage + KEY_SUFFIX_EPISODE_NUMBER
+			key = episode.detailUrl + KEY_SUFFIX_EPISODE_NUMBER
 			appConfig.SetValue(key, str(episode.episode))
 		
 		lastUpdateTime = time.time()
@@ -250,18 +253,20 @@ def clearShowDataCache(show, appConfig):
 		episodes = []
 		if episodesString != "":
 			episodes = episodesString.split(SEPARATOR)
-			for episodePage in episodes:
-				key = episodePage + KEY_SUFFIX_EPISODE_TITLE
+			for detailUrl in episodes:
+				key = detailUrl + KEY_SUFFIX_EPISODE_TITLE
 				appConfig.Reset(key)
-				key = episodePage + KEY_SUFFIX_EPISODE_THUMBNAIL
+				key = episode.detailUrl + KEY_SUFFIX_EPISODE_DOES_DETAIL_URL_INCLUDE_DATA
 				appConfig.Reset(key)
-				key = episodePage + KEY_SUFFIX_EPISODE_DESCRIPTION
+				key = detailUrl + KEY_SUFFIX_EPISODE_THUMBNAIL
 				appConfig.Reset(key)
-				#key = episodePage + KEY_SUFFIX_EPISODE_VIDEO_URL
+				key = detailUrl + KEY_SUFFIX_EPISODE_DESCRIPTION
+				appConfig.Reset(key)
+				#key = detailUrl + KEY_SUFFIX_EPISODE_VIDEO_URL
 				#appConfig.Reset(key)
-				key = episodePage + KEY_SUFFIX_EPISODE_SEASON
+				key = detailUrl + KEY_SUFFIX_EPISODE_SEASON
 				appConfig.Reset(key)
-				key = episodePage + KEY_SUFFIX_EPISODE_NUMBER
+				key = detailUrl + KEY_SUFFIX_EPISODE_NUMBER
 				appConfig.Reset(key)
 			key = show.name + KEY_SUFFIX_EPISODE_LIST
 			# Workaround for reset just removing the first entry for that key instead of clearing all 
@@ -325,23 +330,25 @@ def getShowDataFromCache(show):
 		
 		episodes = []
 		if episodesString != "":
-			episodePages = episodesString.split(SEPARATOR)
-			for episodePage in episodePages:
+			detailUrls = episodesString.split(SEPARATOR)
+			for detailUrl in detailUrls:
 				episode = Episode()
-				episode.episodePage = episodePage
-				log = "parsing cache data for episode: " + str(episodePage)
+				episode.detailUrl = detailUrl
+				log = "parsing cache data for episode: " + str(detailUrl)
 				print log
-				key = episodePage + KEY_SUFFIX_EPISODE_TITLE
+				key = detailUrl + KEY_SUFFIX_EPISODE_TITLE
 				episode.title = appConfig.GetValue(key)
-				key = episodePage + KEY_SUFFIX_EPISODE_THUMBNAIL
+				key = detailUrl + KEY_SUFFIX_EPISODE_DOES_DETAIL_URL_INCLUDE_DATA
+				episode.doesDetailUrlIncludeData = appConfig.GetValue(key)
+				key = detailUrl + KEY_SUFFIX_EPISODE_THUMBNAIL
 				episode.thumbnailUrl = appConfig.GetValue(key)
-				key = episodePage + KEY_SUFFIX_EPISODE_DESCRIPTION
+				key = detailUrl + KEY_SUFFIX_EPISODE_DESCRIPTION
 				episode.description = appConfig.GetValue(key)
-				#key = episodePage + KEY_SUFFIX_EPISODE_VIDEO_URL
+				#key = detailUrl + KEY_SUFFIX_EPISODE_VIDEO_URL
 				#episode.videoUrl = appConfig.GetValue(key)
-				key = episodePage + KEY_SUFFIX_EPISODE_SEASON
+				key = detailUrl + KEY_SUFFIX_EPISODE_SEASON
 				episode.season = int(appConfig.GetValue(key))
-				key = episodePage + KEY_SUFFIX_EPISODE_NUMBER
+				key = detailUrl + KEY_SUFFIX_EPISODE_NUMBER
 				episode.episode = int(appConfig.GetValue(key))
 				episodes.append(episode)
 		else:
@@ -374,13 +381,12 @@ def fetchShowEpisodes(show):
 	episodes = []
 	if TOU_TV_MEDIA_FLAG not in showpage:
 		info = re.compile('<img id=".+?Details" src="(.+?)".+?class="saison">(.+?)</p>.+?class="episode".+?href="(.+?)".+?<b>(.+?)(&nbsp;)*?</b>.+?<p>(.+?)</p>', re.DOTALL).findall(showpage)
-		log = "loading " + show.name + "..."
+		log = "loading " + show.name + " episodes..."
 		print log
 		for img, saison, urlvideo, title, trash, desc in info:
 			videopageurl = TOU_TV_BASE_URL + urlvideo;
 			episode = Episode()
-			episode.episodePage = videopageurl
-			episode.definitionUrl = ""
+			episode.detailUrl = videopageurl
 			episode.thumbnailUrl = img
 			realtitle = re.search('(?:Épisode\s(?:\d+)\s:\s)?(.*)', title)
 			if not realtitle:
@@ -394,6 +400,7 @@ def fetchShowEpisodes(show):
 			if episodeValues is not None:
 				episode.episode = int(episodeValues.group(1))
 			episode.description = desc
+			episode.doesDetailUrlIncludeData = "false"
 			episodes.append(episode)
 	else:
 		desc, episodeNumber, season, title, img = re.compile('toutv.mediaData.+?"description":"(.+?)".+?"episodeNumber":(\d+).+?"seasonNumber":(.+?),.+?"title":"(.+?)".+?toutv.imageA=\'(.+?)\'').findall(showpage)[0]
@@ -406,18 +413,18 @@ def fetchShowEpisodes(show):
 		episode.season = int(season)
 		episode.episode = int(episodeNumber)
 		episode.thumbnailUrl = img
-		episode.episodePage = ""
-		episode.definitionUrl = definitionUrl
+		episode.detailUrl = definitionurl
+		episode.doesDetailUrlIncludeData = "true"
 		episodes.append(episode)
 	return episodes
 
 def addVideoDataToItem(episodeItem):
 	sg = mc.Http()
 	definitionUrl = ""
-	if (len(episodeItem.GetProperty("definitionUrl")) > 0):
-		definitionUrl = episodeItem.GetProperty("definitionUrl")
+	if (episodeItem.GetProperty("doesDetailUrlIncludeData") == "true"):
+		definitionUrl = episodeItem.GetProperty("detailUrl")
 	else:
-		videopageurl = episodeItem.GetProperty("episodePage")
+		videopageurl = episodeItem.GetProperty("detailUrl")
 		log = "Interpreting video page at url " + videopageurl
 		print log
 		videopage = sg.Get(videopageurl)
@@ -425,10 +432,7 @@ def addVideoDataToItem(episodeItem):
 		pid = p.findall(videopage)
 		definitionUrl = "http://release.theplatform.com/content.select?pid=" + pid[0] + '&format=SMIL'
 	
-	return fetchVideoDataToItem(episodeItem, definitionUrl, sg)
-	
-def fetchVideoDataToItem(episodeItem, definitionurl, sg):
-	videodef = sg.Get(definitionurl)
+	videodef = sg.Get(definitionUrl)
 	rtmp_url = re.search('<meta base="rtmp:(.+?)"', videodef)
 	playurl = re.search('<ref src="mp4:(.+?)"', videodef)
 	if playurl: 
@@ -438,7 +442,7 @@ def fetchVideoDataToItem(episodeItem, definitionurl, sg):
 		episodeItem.SetPath(rtmpURL)
 		episodeItem.SetProperty("PlayPath", playpath)
 	else:
-		mc.LogError("skipping item with url " + show.path + ", videopagedefinition: " + videodef)
+		mc.LogError("skipping item with url " + definitionUrl + ", videopagedefinition: " + videodef)
 	return episodeItem
 	
 
@@ -448,8 +452,8 @@ class Episode:
 	description = ""
 	videoUrl = ""
 	videoPath = ""
-	episodePage = ""
-	definitionUrl = ""
+	detailUrl = ""
+	doesDetailUrlIncludeData = "false"
 	season = 0
 	episode = 0
 	
@@ -459,8 +463,8 @@ class Episode:
 		self.description = ""
 		self.videoUrl = ""
 		self.videoPath = ""
-		self.episodePage = ""
-		self.definitionUrl = ""
+		self.detailUrl = ""
+		self.doesDetailUrlIncludeData = "false"
 		self.season = 0
 		self.episode = 0
 

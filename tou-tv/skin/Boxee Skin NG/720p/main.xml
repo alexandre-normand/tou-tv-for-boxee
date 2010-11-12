@@ -240,6 +240,8 @@ if item.GetMediaType() == mc.ListItem.MEDIA_UNKNOWN:
 	mc.LogDebug("checking if everything is there:")
 	items = itemlist.GetItems()
 	for item in items:
+		log = "label:" + item.GetLabel() + ", path:" + item.GetPath() + ", thumb:" + item.GetThumbnail() + ", title: " + item.GetTitle()
+		print log
 		mc.LogDebug("label:" + item.GetLabel() + ", path:" + item.GetPath() + ", thumb:" + item.GetThumbnail() + ", title: " + item.GetTitle())
 	itemlist.SetFocusedItem(0)
 	mc.HideDialogWait()
