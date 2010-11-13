@@ -60,6 +60,15 @@ mc.HideDialogWait()
 				<height>300</height>
 				<texture>redspot.png</texture>
 			</control>-->
+			<control type="largeimage">
+				<visible>!Container(120).IsLoading + !Container(120).IsEmpty</visible>
+				<posy>0</posy>
+				<posx>0</posx>
+				<width>1280</width>
+				<fadetime>200</fadetime>
+				<aspectratio>scale</aspectratio>
+				<info>Container(120).Listitem.property(custom:background)</info>
+			</control>
 			<control type="label" id="100">
 				<posx>24</posx>
 				<posy>10</posy>
@@ -128,21 +137,6 @@ win.GetControl(120).SetFocus()
 ]]></onclick>
 			</control>
 		</control>
-		<!--<control type="group">
-			<control type="image">
-				<posy>270</posy>
-				<width>1280</width>
-				<height>450</height>
-				<texture>black.png</texture>
-				<animation effect="fade" end="70" time="0" condition="true">Conditional</animation>
-			</control>
-			<control type="image">
-				<posy>268</posy>
-				<width>1280</width>
-				<height>2</height>
-				<texture>bc_highlight.png</texture>
-			</control>
-		</control>-->
 		<control type="group">
 			<visible>!Container(120).IsLoading + !Container(120).IsEmpty</visible>
 			<posx>40</posx>
@@ -240,7 +234,7 @@ if item.GetMediaType() == mc.ListItem.MEDIA_UNKNOWN:
 	mc.LogDebug("checking if everything is there:")
 	items = itemlist.GetItems()
 	for item in items:
-		log = "label:" + item.GetLabel() + ", path:" + item.GetPath() + ", thumb:" + item.GetThumbnail() + ", title: " + item.GetTitle()
+		log = "label:" + item.GetLabel() + ", path:" + item.GetPath() + ", thumb:" + item.GetThumbnail() + ", title: " + item.GetTitle() + ", background: " + item.GetProperty("background")
 		print log
 		mc.LogDebug("label:" + item.GetLabel() + ", path:" + item.GetPath() + ", thumb:" + item.GetThumbnail() + ", title: " + item.GetTitle())
 	itemlist.SetFocusedItem(0)

@@ -160,7 +160,6 @@ def getEpisodeListItems(show, episodes):
 	episodeItems = mc.ListItems()
 	for episode in episodes:
 		episodeItem = mc.ListItem(mc.ListItem.MEDIA_VIDEO_EPISODE)
-		episodeItem.SetImage(0, show.backgroundUrl)
 		episodeItem.SetLabel(episode.title)
 		episodeItem.SetSeason(episode.season)
 		episodeItem.SetTVShowTitle(show.name)
@@ -169,9 +168,11 @@ def getEpisodeListItems(show, episodes):
 		episodeItem.SetTitle(episode.title)
 		episodeItem.SetProperty("DetailUrl", episode.detailUrl)
 		episodeItem.SetProperty("DoesDetailUrlIncludeData", episode.doesDetailUrlIncludeData)
-		episodeItem.SetPath("http://dummy.com/")
+		# Dummy path that simply needs to be unique, otherwise boxee won't refresh the thumbnail if the path is empty or always the same
+		episodeItem.SetPath(episode.thumbnailUrl)
 		#episodeItem.SetProperty("PlayPath", episode.videoPath)
 		episodeItem.SetProperty("show.path", show.path)
+		episodeItem.SetProperty("background", show.backgroundUrl)
 		episodeItem.SetEpisode(episode.episode)
 		episodeItems.append(episodeItem)
 		
