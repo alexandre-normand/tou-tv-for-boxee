@@ -28,19 +28,17 @@ MASTER_LOCK = threading.RLock()
 
 def initCache():
 	appConfig = mc.GetApp().GetLocalConfig()
-	# TODO : remove this once testing has proven it works
+	# Could be removed to optimize loading but since data fetching had been optimized, it feels more safe to reset everything on startup
 	appConfig.ResetAll()
 	
 	currentDataVersion = appConfig.GetValue(KEY_DATA_VERSION)
 	lastUpdate = appConfig.GetValue(KEY_LAST_SHOW_LIST_UPDATE)
 	
-	log = "Current config is: DataVersion(" + currentDataVersion + "), lastUpdate(" + lastUpdate + "), Shows(" + appConfig.Implode(SEPARATOR, KEY_SHOWS) + ")"
-	print log
+	mc.LogDebug("Current config is: DataVersion(" + currentDataVersion + "), lastUpdate(" + lastUpdate + "), Shows(" + appConfig.Implode(SEPARATOR, KEY_SHOWS) + ")")
 	
 	if currentDataVersion != "":
 		if DATA_VERSION > int(currentDataVersion):
-			log = "Resetting all config because new data version is " + str(DATA_VERSION) + " and old data version was " + currentDataVersion
-			print log
+			mc.LogDebug("Resetting all config because new data version is " + str(DATA_VERSION) + " and old data version was " + currentDataVersion)
 			appConfig.ResetAll()
 			appConfig.SetValue(KEY_DATA_VERSION, str(DATA_VERSION))
 	else:
@@ -53,25 +51,21 @@ def initCache():
 	else:
 		expirationTime = float(lastUpdate) + DATA_EXPIRATION
 		
-		log = "Calculated expiration time is: " + str(expirationTime) + ", currentTime is: " + str(time.time())
-		print log
+		mc.LogDebug("Calculated expiration time is: " + str(expirationTime) + ", currentTime is: " + str(time.time()))
 		
 		if time.time() > expirationTime:
 			updateShowListCache()
 		else:
-			log = "List of shows still valid, last updated: " + lastUpdate
-			print log
+			mc.LogDebug("List of shows still valid, last updated: " + lastUpdate)
 		
-	log = "dataversion: " + str(DATA_VERSION)
-	print log
+	mc.LogDebug("dataversion: " + str(DATA_VERSION))
 	
 	return 0
 
 def updateShowListCache():
 	appConfig = mc.GetApp().GetLocalConfig()
 	shows = fetchShows()
-	log = "Acquiring master lock..."
-	print log
+	mc.LogDebug("Acquiring master lock...")
 	MASTER_LOCK.acquire()
 	try:
 		# Workaround for reset just removing the first entry for that key instead of clearing all 
@@ -88,24 +82,20 @@ def updateShowListCache():
 		lastUpdateTime = time.time()
 		appConfig.SetValue(KEY_LAST_SHOW_LIST_UPDATE, str(lastUpdateTime))
 		
-		log = "Updated list of shows and last update time set to:" + str(lastUpdateTime)
-		print log
+		mc.LogDebug("Updated list of shows and last update time set to:" + str(lastUpdateTime))
 	finally:
-		log = "Releasing master lock"
-		print log
+		mc.LogDebug("Releasing master lock")
 		MASTER_LOCK.release()
 	return 1
 
 def getShowsFromCache():
 	appConfig = mc.GetApp().GetLocalConfig()
 	
-	log = "Acquiring master lock to read shows from cache..."
-	print log
+	mc.LogDebug("Acquiring master lock to read shows from cache...")
 	MASTER_LOCK.acquire()
 	try:
 		showsString = appConfig.Implode(SEPARATOR, KEY_SHOWS)
-		log = "Shows string: " + showsString
-		print log
+		mc.LogDebug("Shows string: " + showsString)
 		
 		shows = []
 		if showsString != "":
@@ -118,15 +108,12 @@ def getShowsFromCache():
 				shows.append(show)
 				locks[show.name] = threading.RLock()
 		else:
-			log = "Warning, no shows list found in cache, forgot to initialize cache?"
-			print log
+			mc.LogDebug("Warning, no shows list found in cache, forgot to initialize cache?")
 			
 		showsString = appConfig.Implode(SEPARATOR, KEY_SHOWS)
-		log = "Shows string after: " + showsString
-		print log
+		mc.LogDebug("Shows string after: " + showsString)
 	finally:
-		log = "Releasing master lock after reading shows from cache"
-		print log
+		mc.LogDebug("Releasing master lock after reading shows from cache")
 		MASTER_LOCK.release()
 	
 	return shows
@@ -143,8 +130,7 @@ def fetchShows():
 		show.name = name
 		show.path = url
 		shows.append(show)
-		log = "adding " + name
-		print log
+		mc.LogDebug("Adding " + name)
 	return shows
 	
 def getShowListItems(shows):
@@ -170,7 +156,6 @@ def getEpisodeListItems(show, episodes):
 		episodeItem.SetProperty("DoesDetailUrlIncludeData", episode.doesDetailUrlIncludeData)
 		# Dummy path that simply needs to be unique, otherwise boxee won't refresh the thumbnail if the path is empty or always the same
 		episodeItem.SetPath(episode.thumbnailUrl)
-		#episodeItem.SetProperty("PlayPath", episode.videoPath)
 		episodeItem.SetProperty("show.path", show.path)
 		episodeItem.SetProperty("background", show.backgroundUrl)
 		episodeItem.SetEpisode(episode.episode)
@@ -180,16 +165,13 @@ def getEpisodeListItems(show, episodes):
 	
 def updateShowDataCache(show, appConfig):
 	# Waiting for master lock
-	log = "Waiting for Master lock to update show data cache..."
-	print log
+	mc.LogDebug("Waiting for Master lock to update show data cache...")
 	MASTER_LOCK.acquire()
 	try:
-		log = "Acquiring lock to update show data cache (" + show.name + ")"
-		print log
+		mc.LogDebug("Acquiring lock to update show data cache (" + show.name + ")")
 		locks[show.name].acquire()
 	finally:
-		log = "Releasing master lock after getting show data lock (" + show.name + ")"
-		print log
+		mc.LogDebug("Releasing master lock after getting show data lock (" + show.name + ")")
 		MASTER_LOCK.release()
 		
 	try:
@@ -209,8 +191,6 @@ def updateShowDataCache(show, appConfig):
 			appConfig.SetValue(key, episode.thumbnailUrl)
 			key = episode.detailUrl + KEY_SUFFIX_EPISODE_DESCRIPTION
 			appConfig.SetValue(key, episode.description)
-			#key = episode.detailUrl + KEY_SUFFIX_EPISODE_VIDEO_URL
-			#appConfig.SetValue(key, episode.videoUrl)
 			key = episode.detailUrl + KEY_SUFFIX_EPISODE_SEASON
 			appConfig.SetValue(key, str(episode.season))
 			key = episode.detailUrl + KEY_SUFFIX_EPISODE_NUMBER
@@ -220,33 +200,27 @@ def updateShowDataCache(show, appConfig):
 		key = show.name + KEY_SUFFIX_LAST_UPDATED
 		appConfig.SetValue(key, str(lastUpdateTime))
 		
-		log = "Updated list of episodes for show (" + show.name + ") and set episode list last update time to:" + str(lastUpdateTime)
-		print log
+		mc.LogDebug("Updated list of episodes for show (" + show.name + ") and set episode list last update time to:" + str(lastUpdateTime))
 	finally:
 		locks[show.name].release()
-		log = "Releasing lock after update to show data cache (" + show.name + ")"
-		print log
+		mc.LogDebug("Releasing lock after update to show data cache (" + show.name + ")")
 	return 1
 	
 def clearShowDataCache(show, appConfig):
 	# Waiting for master lock
-	log = "Waiting for Master lock to clear show data cache..."
-	print log
+	mc.LogDebug("Waiting for Master lock to clear show data cache...")
 	MASTER_LOCK.acquire()
 	try:
-		log = "Acquiring lock to clear show data cache (" + show.name + ")"
-		print log
+		mc.LogDebug("Acquiring lock to clear show data cache (" + show.name + ")")
 		locks[show.name].acquire()
 	finally:
-		log = "Releasing master lock after getting lock for show data cache (" + show.name + ")"
-		print log
+		mc.LogDebug("Releasing master lock after getting lock for show data cache (" + show.name + ")")
 		MASTER_LOCK.release()
 		
 	try:
 		key = show.name + KEY_SUFFIX_EPISODE_LIST
 		episodesString = appConfig.Implode(SEPARATOR, key)
-		log = "Episodes string: " + episodesString
-		print log
+		mc.LogDebug("Episodes string: " + episodesString)
 		
 		key = show.name + KEY_SUFFIX_SHOW_BACKGROUND
 		appConfig.Reset(key)
@@ -263,8 +237,6 @@ def clearShowDataCache(show, appConfig):
 				appConfig.Reset(key)
 				key = detailUrl + KEY_SUFFIX_EPISODE_DESCRIPTION
 				appConfig.Reset(key)
-				#key = detailUrl + KEY_SUFFIX_EPISODE_VIDEO_URL
-				#appConfig.Reset(key)
 				key = detailUrl + KEY_SUFFIX_EPISODE_SEASON
 				appConfig.Reset(key)
 				key = detailUrl + KEY_SUFFIX_EPISODE_NUMBER
@@ -277,30 +249,24 @@ def clearShowDataCache(show, appConfig):
 			key = show.name + KEY_SUFFIX_LAST_UPDATED
 			appConfig.Reset(key)
 		else:
-			log = "Warning, no episode list found in cache, cache inconsistent"
-			print log
+			mc.LogDebug("Warning, no episode list found in cache, cache inconsistent")
 	finally:
 		locks[show.name].release()
-		log = "Releasing lock after clearing show data cache (" + show.name + ")"
-		print log
-	log = "Cleared show data from cache (" + show.name + ")"
-	print log
+		mc.LogDebug("Releasing lock after clearing show data cache (" + show.name + ")")
+	mc.LogDebug("Cleared show data from cache (" + show.name + ")")
 	return 1
 	
 def getShowDataFromCache(show):
 	appConfig = mc.GetApp().GetLocalConfig()
 	
 	# Waiting for master lock
-	log = "Waiting for Master lock to retrieve show data cache..."
-	print log
+	mc.LogDebug("Waiting for Master lock to retrieve show data cache...")
 	MASTER_LOCK.acquire()
 	try:
-		log = "Acquiring lock to retrieve show data cache (" + show.name + ")"
-		print log
+		mc.LogDebug("Acquiring lock to retrieve show data cache (" + show.name + ")")
 		locks[show.name].acquire()
 	finally:
-		log = "Releasing master lock after getting lock for show data cache (" + show.name + ")"
-		print log
+		mc.LogDebug("Releasing master lock after getting lock for show data cache (" + show.name + ")")
 		MASTER_LOCK.release()
 		
 	try:
@@ -312,19 +278,16 @@ def getShowDataFromCache(show):
 		else:
 			expirationTime = float(lastUpdate) + DATA_EXPIRATION
 			
-			log = "Calculated expiration time for episodes is: " + str(expirationTime) + ", currentTime is: " + str(time.time())
-			print log
+			mc.LogDebug("Calculated expiration time for episodes is: " + str(expirationTime) + ", currentTime is: " + str(time.time()))
 			
 			if time.time() > expirationTime:
 				updateShowDataCache(show, appConfig)
 			else:
-				log = "List of episodes still valid, last updated: " + lastUpdate
-				print log
+				mc.LogDebug("List of episodes still valid, last updated: " + lastUpdate)
 		
 		key = show.name + KEY_SUFFIX_EPISODE_LIST
 		episodesString = appConfig.Implode(SEPARATOR, key)
-		log = "Episodes string: " + episodesString
-		print log
+		mc.LogDebug("Episodes string: " + episodesString)
 		
 		key = show.name + KEY_SUFFIX_SHOW_BACKGROUND
 		show.backgroundUrl = appConfig.GetValue(key)
@@ -335,8 +298,7 @@ def getShowDataFromCache(show):
 			for detailUrl in detailUrls:
 				episode = Episode()
 				episode.detailUrl = detailUrl
-				log = "parsing cache data for episode: " + str(detailUrl)
-				print log
+				mc.LogDebug("parsing cache data for episode: " + str(detailUrl))
 				key = detailUrl + KEY_SUFFIX_EPISODE_TITLE
 				episode.title = appConfig.GetValue(key)
 				key = detailUrl + KEY_SUFFIX_EPISODE_DOES_DETAIL_URL_INCLUDE_DATA
@@ -345,45 +307,34 @@ def getShowDataFromCache(show):
 				episode.thumbnailUrl = appConfig.GetValue(key)
 				key = detailUrl + KEY_SUFFIX_EPISODE_DESCRIPTION
 				episode.description = appConfig.GetValue(key)
-				#key = detailUrl + KEY_SUFFIX_EPISODE_VIDEO_URL
-				#episode.videoUrl = appConfig.GetValue(key)
 				key = detailUrl + KEY_SUFFIX_EPISODE_SEASON
 				episode.season = int(appConfig.GetValue(key))
 				key = detailUrl + KEY_SUFFIX_EPISODE_NUMBER
 				episode.episode = int(appConfig.GetValue(key))
 				episodes.append(episode)
 		else:
-			log = "Warning, no episode list found in cache, something is wrong"
-			print log
+			mc.LogDebug("Warning, no episode list found in cache, something is wrong")
 	finally:
 		locks[show.name].release()
-		log = "Releasing lock after retrieving show data cache (" + show.name + ")"
-		print log
+		mc.LogDebug("Releasing lock after retrieving show data cache (" + show.name + ")")
 	showsString = appConfig.Implode(SEPARATOR, KEY_SHOWS)
-	log = "Finished loading episodes from cache for show (" + show.name + ")"
-	print log
+	mc.LogDebug("Finished loading episodes from cache for show (" + show.name + ")")
 	
 	return episodes
 	
 def fetchShowEpisodes(show):
-	log = "Fetch episode list for " + show.name
-	print log
+	mc.LogDebug("Fetch episode list for " + show.name)
 	sg = mc.Http()	
 	showpage = sg.Get(show.path)
 	background = re.search('background-image:url\(.*http://(.+)\&.*\)', showpage)
 	if background is not None:
 		show.backgroundUrl = "http://" + background.group(1)
-		#localpath = mc.GetTempDir() + show.name + ".jpg"
-		#show.backgroundUrl = localpath
-		#sg.Download(backgroundurl, localpath)
-		log = "Background url found with local path " + show.backgroundUrl
-		print log
+		mc.LogDebug("Background url found with local path " + show.backgroundUrl)
 	
 	episodes = []
 	if TOU_TV_MEDIA_FLAG not in showpage:
 		info = re.compile('<img id=".+?Details" src="(.+?)".+?class="saison">(.+?)</p>.+?class="episode".+?href="(.+?)".+?<b>(.+?)(&nbsp;)*?</b>.+?<p>(.+?)</p>', re.DOTALL).findall(showpage)
-		log = "loading " + show.name + " episodes..."
-		print log
+		mc.LogDebug("loading " + show.name + " episodes...")
 		for img, saison, urlvideo, title, trash, desc in info:
 			videopageurl = TOU_TV_BASE_URL + urlvideo;
 			episode = Episode()
@@ -426,8 +377,7 @@ def addVideoDataToItem(episodeItem):
 		definitionUrl = episodeItem.GetProperty("detailUrl")
 	else:
 		videopageurl = episodeItem.GetProperty("detailUrl")
-		log = "Interpreting video page at url " + videopageurl
-		print log
+		mc.LogDebug("Interpreting video page at url " + videopageurl)
 		videopage = sg.Get(videopageurl)
 		p = re.compile("toutv.releaseUrl='(.+?)'")
 		pid = p.findall(videopage)
@@ -485,8 +435,7 @@ class PreFetchingWorker(threading.Thread):
 		threading.Thread.__init__(self, name="PreFetchingWorker-Thread")
 	
 	def run(self):
-		log = "[PreFetchWorker] Updating episodes for list of shows"
-		print log
+		mc.LogDebug("[PreFetchWorker] Updating episodes for list of shows")
 		
 		numberOfShowsUpdated = 0
 		appConfig = mc.GetApp().GetLocalConfig()
@@ -501,15 +450,12 @@ class PreFetchingWorker(threading.Thread):
 			else:
 				expirationTime = float(lastUpdate) + DATA_EXPIRATION
 		
-				log = "[PreFetchWorker] Calculated expiration time for episodes is: " + str(expirationTime) + ", currentTime is: " + str(time.time())
-				print log
+				mc.LogDebug("[PreFetchWorker] Calculated expiration time for episodes is: " + str(expirationTime) + ", currentTime is: " + str(time.time()))
 		
 				if time.time() > expirationTime:
 					numberOfShowsUpdated = numberOfShowsUpdated + 1
 					updateShowDataCache(show, appConfig)
 				else:
-					log = "[PreFetchWorker] List of episodes still valid, last updated: " + lastUpdate
-					print log
+					mc.LogDebug("[PreFetchWorker] List of episodes still valid, last updated: " + lastUpdate)
 			
-		log = "[PreFetchWorker] job is done, updated " + str(numberOfShowsUpdated) + " shows"
-		print log
+		mc.LogDebug("[PreFetchWorker] job is done, updated " + str(numberOfShowsUpdated) + " shows")

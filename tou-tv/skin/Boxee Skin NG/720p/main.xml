@@ -13,8 +13,7 @@ itemlist = window.GetList(120)
 
 # make sure app has not been loaded yet
 if not itemlist.GetItems():
-	log = "App is NOT initialized...loading..."
-	print log
+	mc.LogDebug("App is NOT initialized...loading...")
 	
 	util.initCache()
 	
@@ -25,13 +24,12 @@ if not itemlist.GetItems():
 	itemlist.SetItems(items)
 	itemlist.SetFocusedItem(0)
 else:
-	log = "App has already been loaded, skipping..."
-	print log
+	mc.LogDebug("App has already been loaded, skipping...")
 mc.HideDialogWait()
 
-# Start pre-fetching for all shows
+# Start pre-fetching for all shows (disabled by default)
 #util.PreFetchingWorker(shows).start()
-#print "Process started"
+#mc.LogDebug("Pre-fetching started...")
 ]]></onload>
 	<controls>
 		<control type="image">
@@ -52,14 +50,6 @@ mc.HideDialogWait()
 				<texture>black.png</texture>
 				<animation effect="fade" end="50" time="0" condition="true">Conditional</animation>
 			</control>
-			<!--<control type="image">
-				<visible>true</visible>
-				<posx>0</posx>
-				<posy>0</posy>
-				<width>400</width>
-				<height>300</height>
-				<texture>redspot.png</texture>
-			</control>-->
 			<control type="largeimage">
 				<visible>!Container(120).IsLoading + !Container(120).IsEmpty</visible>
 				<posy>0</posy>
@@ -98,7 +88,6 @@ mc.HideDialogWait()
 				<label>Rafraîchir</label>
 				<onclick lang="python">
 				<![CDATA[
-print "Refresh clicked"
 win = mc.GetActiveWindow()
 itemlist = win.GetList(120)
 update = "shows"
@@ -216,7 +205,6 @@ win.GetControl(120).SetFocus()
 				</focusedlayout>
 				<content type="url" url="">
 					<onclick lang="python"><![CDATA[
-print "Got clicked"
 win = mc.GetActiveWindow()
 itemlist = win.GetList(120)
 item = itemlist.GetItem(itemlist.GetFocusedItem())
@@ -234,9 +222,7 @@ if item.GetMediaType() == mc.ListItem.MEDIA_UNKNOWN:
 	mc.LogDebug("checking if everything is there:")
 	items = itemlist.GetItems()
 	for item in items:
-		log = "label:" + item.GetLabel() + ", path:" + item.GetPath() + ", thumb:" + item.GetThumbnail() + ", title: " + item.GetTitle() + ", background: " + item.GetProperty("background")
-		print log
-		mc.LogDebug("label:" + item.GetLabel() + ", path:" + item.GetPath() + ", thumb:" + item.GetThumbnail() + ", title: " + item.GetTitle())
+		mc.LogDebug("label:" + item.GetLabel() + ", path:" + item.GetPath() + ", thumb:" + item.GetThumbnail() + ", title: " + item.GetTitle() + ", background: " + item.GetProperty("background"))
 	itemlist.SetFocusedItem(0)
 	mc.HideDialogWait()
 else:
