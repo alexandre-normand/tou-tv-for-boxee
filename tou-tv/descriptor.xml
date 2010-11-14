@@ -10,7 +10,7 @@
   <email>alexandre.bressani.normand@gmail.com</email>
   <type>skin</type>
   <platform>all</platform>
-  <minversion>0.9.11</minversion>
+  <minversion>0.9.22</minversion>
   <startWindow>14000</startWindow>
   <country-allow>ca</country-allow>
   <test-app>true</test-app>
