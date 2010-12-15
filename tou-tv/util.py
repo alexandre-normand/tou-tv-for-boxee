@@ -21,6 +21,7 @@ KEY_SUFFIX_EPISODE_VIDEO_URL = ".videoUrl"
 KEY_SUFFIX_EPISODE_SEASON = ".season"
 KEY_SUFFIX_EPISODE_NUMBER = ".number"
 KEY_SUFFIX_EPISODE_DOES_DETAIL_URL_INCLUDE_DATA = ".doesDetailUrlIncludeData"
+KEY_SUFFIX_GENRE_LISTING_PAGE = ".listingPage"
 SEPARATOR = "<itemseparator>"
 
 locks = dict()
@@ -62,9 +63,24 @@ def initCache():
 	
 	return 0
 
-def updateShowListCache():
+def getGenres():
+	sg = mc.Http()
+	html = sg.Get(TOU_TV_BASE_URL)
+	genres = []
+	results = re.compile('a id="GenresFooterRepeater.* href="/(.+?)">(.+?)</a>').findall(html)
+	mc.LogDebug("trying to load list of shows...")
+	for path, name in results:
+		url = TOU_TV_BASE_URL + "/repertoire/" + path
+		genre = Genre()
+		genre.label = name
+		genre.listingPage = url
+		genres.append(genre)
+		mc.LogDebug("Adding genre " + name + " with path " + url)
+	return genres
+	
+def updateShowListCache(listingPage):
 	appConfig = mc.GetApp().GetLocalConfig()
-	shows = fetchShows()
+	shows = fetchShows(listingPage)
 	mc.LogDebug("Acquiring master lock...")
 	MASTER_LOCK.acquire()
 	try:
@@ -118,9 +134,9 @@ def getShowsFromCache():
 	
 	return shows
 
-def fetchShows():
+def fetchShows(listingPage):
 	sg = mc.Http()
-	html = sg.Get(TOU_TV_BASE_URL + "/repertoire")
+	html = sg.Get(listingPage)
 	shows = []
 	results = re.compile('href="(.+?)">\s+<h1 class="titreemission">(.+?)</h1>').findall(html)
 	mc.LogDebug("trying to load list of shows...")
@@ -133,12 +149,23 @@ def fetchShows():
 		mc.LogDebug("Adding " + name)
 	return shows
 	
+def getGenreListItems(genres):
+	genreItems = mc.ListItems()
+	for genre in genres:
+		genreItem = mc.ListItem(mc.ListItem.MEDIA_UNKNOWN)
+		genreItem.SetLabel(genre.label)
+		genreItem.SetPath(genre.listingPage)
+		genreItem.SetProperty("isFilter", "true")
+		genreItems.append(genreItem)
+	return genreItems
+	
 def getShowListItems(shows):
 	showItems = mc.ListItems()
 	for show in shows:
 		showItem = mc.ListItem(mc.ListItem.MEDIA_UNKNOWN)
 		showItem.SetLabel(show.name)
 		showItem.SetPath(show.path)
+		showItem.SetProperty("isFilter", "false")
 		showItems.append(showItem)
 	return showItems
 
@@ -159,6 +186,7 @@ def getEpisodeListItems(show, episodes):
 		episodeItem.SetProperty("show.path", show.path)
 		episodeItem.SetProperty("background", show.backgroundUrl)
 		episodeItem.SetEpisode(episode.episode)
+		episodeItem.SetProperty("isFilter", "false")
 		episodeItems.append(episodeItem)
 		
 	return episodeItems
@@ -428,7 +456,15 @@ class Show:
 		self.name = ""
 		self.path = ""
 		self.backgroundUrl = ""
-		
+	
+class Genre:
+	label = ""
+	listingUrl = ""
+	
+	def __init__(self):
+		self.label = ""
+		self.listingUrl = ""
+	
 class PreFetchingWorker(threading.Thread):
 	def __init__(self, shows):
 		self.shows = shows

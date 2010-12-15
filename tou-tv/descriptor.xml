@@ -13,5 +13,4 @@
   <minversion>0.9.22</minversion>
   <startWindow>14000</startWindow>
   <country-allow>ca</country-allow>
-  <test-app>true</test-app>
 </app>
