@@ -15,8 +15,6 @@ itemlist = window.GetList(120)
 if not itemlist.GetItems():
 	mc.LogDebug("App is NOT initialized...loading...")
 	
-	#util.initCache()
-	
 	genres = util.getGenres()
 	
 	#shows = util.getShowsFromCache()
@@ -29,10 +27,6 @@ if not itemlist.GetItems():
 else:
 	mc.LogDebug("App has already been loaded, skipping...")
 mc.HideDialogWait()
-
-# Start pre-fetching for all shows (disabled by default)
-#util.PreFetchingWorker(shows).start()
-#mc.LogDebug("Pre-fetching started...")
 ]]></onload>
 	<controls>
 		<control type="image">
@@ -101,9 +95,8 @@ if itemlist and itemlist.GetItem(0).GetMediaType() == mc.ListItem.MEDIA_VIDEO_EP
 	show.name = item.GetTVShowTitle()
 	show.path = item.GetProperty("show.path")
 	appConfig = mc.GetApp().GetLocalConfig()
-	util.updateShowDataCache(show, appConfig)
 	
-	episodes = util.getShowDataFromCache(show)
+	episodes = util.fetchShowEpisodes(show)
 	sorted_episodes = sorted(episodes, key=operator.attrgetter('episode'), reverse=True)
 	sorted_seasons = sorted(sorted_episodes, key=operator.attrgetter('season'), reverse=True)	
 	items = util.getEpisodeListItems(show, sorted_seasons)
@@ -115,14 +108,10 @@ elif itemlist and itemlist.GetItem(0).GetProperty("isFilter") == "true":
 	mc.HideDialogWait()
 else:
 	mc.ShowDialogWait()	
-	util.updateShowListCache()
+	item = itemlist.GetItem(0)
 	
-	shows = util.getShowsFromCache()
+	shows = util.fetchShows(item.GetPath())
 	shows = sorted(shows, key=operator.attrgetter('name'))
-	
-	for show in shows:
-		log = "name:" + show.name + ", path:" + show.path 
-		print log
 	
 	items = util.getShowListItems(shows)
 	itemlist.SetItems(items)
@@ -217,8 +206,7 @@ item = itemlist.GetItem(itemlist.GetFocusedItem())
 if item.GetProperty("isFilter") == "true":
 	mc.ShowDialogWait()
 	win.PushState()
-	util.updateShowListCache(item.GetPath())
-	shows = util.getShowsFromCache()
+	shows = util.fetchShows(item.GetPath())
 	shows = sorted(shows, key=operator.attrgetter('name'))
 	items = util.getShowListItems(shows)
 	itemlist.SetItems(items)
@@ -230,7 +218,7 @@ elif item.GetMediaType() == mc.ListItem.MEDIA_UNKNOWN:
 	show = util.Show()
 	show.path = item.GetPath()
 	show.name = item.GetLabel()
-	episodes = util.getShowDataFromCache(show)
+	episodes = util.fetchShowEpisodes(show)
 	sorted_episodes = sorted(episodes, key=operator.attrgetter('episode'), reverse=True)
 	sorted_seasons = sorted(sorted_episodes, key=operator.attrgetter('season'), reverse=True)	
 	items = util.getEpisodeListItems(show, sorted_seasons)
