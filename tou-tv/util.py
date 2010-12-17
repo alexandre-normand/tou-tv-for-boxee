@@ -54,22 +54,35 @@ def getGenres():
 		html = sg.Get(TOU_TV_BASE_URL)
 		results = re.compile('a id="GenresFooterRepeater.* href="/(.+?)">(.+?)</a>').findall(html)
 		mc.LogDebug("trying to load list of shows...")
-		for path, name in results:
-			url = TOU_TV_BASE_URL + "/repertoire/" + path
+		if len(results) > 0:
+			for path, name in results:
+				url = TOU_TV_BASE_URL + "/repertoire/" + path
+				genre = Genre()
+				genre.label = name
+				genre.listingPage = url
+				genres.append(genre)
+				mc.LogDebug("Adding genre " + name + " with path " + url)
+			# Always add filter for all shows
 			genre = Genre()
-			genre.label = name
-			genre.listingPage = url
+			genre.label = "Toutes les émissions"
+			genre.listingPage = TOU_TV_BASE_URL + "/repertoire"
 			genres.append(genre)
-			mc.LogDebug("Adding genre " + name + " with path " + url)
-		# Always add filter for all shows
-		genre = Genre()
-		genre.label = "Toutes les émissions"
-		genre.listingPage = TOU_TV_BASE_URL + "/repertoire"
-		genres.append(genre)
+		else:
+			mc.LogError("Error while trying to find genre filters in page content: " + html)
+			# create a fake entry with an error message
+			genre = Genre()
+			genre.label = "Une erreur est survenue en allant récupérer la liste des filtres, si le problème persiste, veuillez envoyer boxee.log à http://code.google.com/p/tou-tv-for-boxee/issues/list."
+			genre.listingPage = ""
+			genres.append(genre)
 	except:
 		exc_type, exc_value, exc_traceback = sys.exc_info()
 		mc.LogError(repr(traceback.format_exception(exc_type, exc_value, exc_traceback)))
 		print repr(traceback.format_exception(exc_type, exc_value, exc_traceback))
+		# create a fake entry with an error message
+		genre = Genre()
+		genre.label = "Une erreur est survenue en allant récupérer la liste des filtres, si le problème persiste, veuillez envoyer boxee.log à http://code.google.com/p/tou-tv-for-boxee/issues/list."
+		genre.listingPage = ""
+		genres.append(genre)
 		
 	return genres
 
@@ -80,17 +93,30 @@ def fetchShows(listingPage):
 		html = sg.Get(listingPage)
 		results = re.compile('href="(.+?)">\s+<h1 class="titreemission">(.+?)</h1>').findall(html)
 		mc.LogDebug("trying to load list of shows...")
-		for url, name in results:
-			url = TOU_TV_BASE_URL + url
+		if len(results) > 0:
+			for url, name in results:
+				url = TOU_TV_BASE_URL + url
+				show = Show()
+				show.name = name
+				show.path = url
+				shows.append(show)
+				mc.LogDebug("Adding " + name)
+		else:
+			mc.LogError("Error while trying to find shows in page content: " + html)
+			# create a fake entry with an error message
 			show = Show()
-			show.name = name
-			show.path = url
+			show.name = "Une erreur est survenue en allant récupérer la liste des émissions, si le problème persiste, veuillez envoyer boxee.log à http://code.google.com/p/tou-tv-for-boxee/issues/list."
+			show.path = ""
 			shows.append(show)
-			mc.LogDebug("Adding " + name)
 	except:
 		exc_type, exc_value, exc_traceback = sys.exc_info()
 		mc.LogError(repr(traceback.format_exception(exc_type, exc_value, exc_traceback)))
 		print repr(traceback.format_exception(exc_type, exc_value, exc_traceback))
+		# create a fake entry with an error message
+		show = Show()
+		show.name = "Une erreur est survenue en allant récupérer la liste des émissions, si le problème persiste, veuillez envoyer boxee.log à http://code.google.com/p/tou-tv-for-boxee/issues/list."
+		show.path = ""
+		shows.append(show)
 		
 	return shows
 	
@@ -148,45 +174,64 @@ def fetchShowEpisodes(show):
 			mc.LogDebug("Background url found with local path " + show.backgroundUrl)
 		
 		if TOU_TV_MEDIA_FLAG not in showpage:
-			info = re.compile('<img id=".+?Details" src="(.+?)".+?class="saison">(.+?)</p>.+?class="episode".+?href="(.+?)".+?<b>(.+?)(&nbsp;)*?</b>.+?<p>(.+?)</p>', re.DOTALL).findall(showpage)
+			results = re.compile('<img id=".+?Details" src="(.+?)".+?class="saison">(.+?)</p>.+?class="episode".+?href="(.+?)".+?<b>(.+?)(&nbsp;)*?</b>.+?<p>(.+?)</p>', re.DOTALL).findall(showpage)
 			mc.LogDebug("loading " + show.name + " episodes...")
-			for img, saison, urlvideo, title, trash, desc in info:
-				videopageurl = TOU_TV_BASE_URL + urlvideo;
+			if len(results) > 0:
+				for img, saison, urlvideo, title, trash, desc in results:
+					videopageurl = TOU_TV_BASE_URL + urlvideo;
+					episode = Episode()
+					episode.detailUrl = videopageurl
+					episode.thumbnailUrl = img
+					realtitle = re.search('(?:Épisode\s(?:\d+)\s:\s)?(.*)', title)
+					if not realtitle:
+						episode.title = title
+					else:
+						episode.title = realtitle.group(1)
+					seasonValues = re.search('(\d+)', saison)
+					if seasonValues is not None:
+						episode.season = int(seasonValues.group(1))
+					episodeValues = re.search('pisode (\d+)', title)
+					if episodeValues is not None:
+						episode.episode = int(episodeValues.group(1))
+					episode.description = desc
+					episode.doesDetailUrlIncludeData = "false"
+					episodes.append(episode)
+			else:
+				mc.LogError("Error while trying to find episodes in page: " + showpage)
+				# create a fake entry with an error message
 				episode = Episode()
-				episode.detailUrl = videopageurl
-				episode.thumbnailUrl = img
-				realtitle = re.search('(?:Épisode\s(?:\d+)\s:\s)?(.*)', title)
-				if not realtitle:
-					episode.title = title
-				else:
-					episode.title = realtitle.group(1)
-				seasonValues = re.search('(\d+)', saison)
-				if seasonValues is not None:
-					episode.season = int(seasonValues.group(1))
-				episodeValues = re.search('pisode (\d+)', title)
-				if episodeValues is not None:
-					episode.episode = int(episodeValues.group(1))
-				episode.description = desc
-				episode.doesDetailUrlIncludeData = "false"
+				episode.title = "Une erreur est survenue en allant récupérer la liste des épisodes, si le problème persiste, veuillez envoyer boxee.log à http://code.google.com/p/tou-tv-for-boxee/issues/list."
 				episodes.append(episode)
 		else:
-			desc, episodeNumber, season, title, img = re.compile('toutv.mediaData.+?"[dD]escription":"(.+?)".+?"[eE]pisodeNumber":(\d+).+?"[sS]easonNumber":(.+?),.+?"[tT]itle":"(.+?)".+?toutv.imageA=\'(.+?)\'').findall(showpage)[0]
-			p = re.compile("toutv.releaseUrl='(.+?)'")
-			pid = p.findall(showpage)
-			definitionurl = "http://release.theplatform.com/content.select?pid=" + pid[0] + '&format=SMIL'
-			episode = Episode()
-			episode.title = title
-			episode.description = desc
-			episode.season = int(season)
-			episode.episode = int(episodeNumber)
-			episode.thumbnailUrl = img
-			episode.detailUrl = definitionurl
-			episode.doesDetailUrlIncludeData = "true"
-			episodes.append(episode)
+			results = re.compile('toutv.mediaData.+?"[dD]escription":"(.+?)".+?"[eE]pisodeNumber":(\d+).+?"[sS]easonNumber":(.+?),.+?"[tT]itle":"(.+?)".+?toutv.imageA=\'(.+?)\'').findall(showpage)
+			if len(results) > 0:
+				desc, episodeNumber, season, title, img = results[0]
+				p = re.compile("toutv.releaseUrl='(.+?)'")
+				pid = p.findall(showpage)
+				definitionurl = "http://release.theplatform.com/content.select?pid=" + pid[0] + '&format=SMIL'
+				episode = Episode()
+				episode.title = title
+				episode.description = desc
+				episode.season = int(season)
+				episode.episode = int(episodeNumber)
+				episode.thumbnailUrl = img
+				episode.detailUrl = definitionurl
+				episode.doesDetailUrlIncludeData = "true"
+				episodes.append(episode)
+			else:
+				mc.LogError("Error while trying to find episodes in single-occurence page: " + showpage)
+				# create a fake entry with an error message
+				episode = Episode()
+				episode.title = "Une erreur est survenue en allant récupérer la liste des épisodes, si le problème persiste, veuillez envoyer boxee.log à http://code.google.com/p/tou-tv-for-boxee/issues/list."
+				episodes.append(episode)
 	except:
 		exc_type, exc_value, exc_traceback = sys.exc_info()
 		mc.LogError(repr(traceback.format_exception(exc_type, exc_value, exc_traceback)))
 		print repr(traceback.format_exception(exc_type, exc_value, exc_traceback))
+		# create a fake entry with an error message
+		episode = Episode()
+		episode.title = "Une erreur est survenue en allant récupérer la liste des épisodes, si le problème persiste, veuillez envoyer boxee.log à http://code.google.com/p/tou-tv-for-boxee/issues/list."
+		episodes.append(episode)
 	
 	return episodes
 

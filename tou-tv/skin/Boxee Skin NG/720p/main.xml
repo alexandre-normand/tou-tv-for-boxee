@@ -144,6 +144,16 @@ win.GetControl(120).SetFocus()
 						<align>left</align>
 						<font>sans28</font>
 						<label>$INFO[ListItem.title] (S$INFO[ListItem.season]E$INFO[ListItem.episode])</label>
+						<visible>!IsEmpty(Container(120).Listitem.title) + !IsEmpty(Container(120).Listitem.season) + !IsEmpty(Container(120).Listitem.episode)</visible>
+						<animation effect="fade" end="30" time="0" condition="true">Conditional</animation>
+					</control>
+					<control type="label">
+						<posx>40</posx>
+						<width>670</width>
+						<height>30</height>
+						<align>left</align>
+						<font>sans28</font>
+						<label>$INFO[ListItem.title]</label>
 						<visible>!IsEmpty(Container(120).Listitem.title)</visible>
 						<animation effect="fade" end="30" time="0" condition="true">Conditional</animation>
 					</control>
@@ -166,6 +176,25 @@ win.GetControl(120).SetFocus()
 						<align>left</align>
 						<font>sans28</font>
 						<label>$INFO[ListItem.title] (S$INFO[ListItem.season]E$INFO[ListItem.episode])</label>
+						<textcolor>white</textcolor>
+						<scroll>true</scroll>
+			            <animation type="Focus">
+			                <effect type="fade" start="30" end="100" time="200"/>
+							<effect type="zoom" center="200,0" start="100" end="120" time="200" />
+			            </animation>
+			            <animation type="UnFocus">
+			                <effect type="fade" start="200" end="30" time="200"/>
+							<effect type="zoom" center="200,0" start="120" end="100" time="200" delay="100" />
+			            </animation>
+			            <visible>!IsEmpty(Container(120).Listitem.title) + !IsEmpty(Container(120).Listitem.season) + !IsEmpty(Container(120).Listitem.episode)</visible>
+					</control>
+					<control type="label" id="5656">
+						<posx>40</posx>
+						<width>670</width>
+						<height>30</height>
+						<align>left</align>
+						<font>sans28</font>
+						<label>$INFO[ListItem.title]</label>
 						<textcolor>white</textcolor>
 						<scroll>true</scroll>
 			            <animation type="Focus">
