@@ -98,20 +98,28 @@ if itemlist and itemlist.GetItem(0).GetMediaType() == mc.ListItem.MEDIA_VIDEO_EP
 	
 	episodes = util.fetchShowEpisodes(show)
 	sorted_episodes = sorted(episodes, key=operator.attrgetter('episode'), reverse=True)
-	sorted_seasons = sorted(sorted_episodes, key=operator.attrgetter('season'), reverse=True)	
+	sorted_seasons = sorted(sorted_episodes, key=operator.attrgetter('season'), reverse=True)
 	items = util.getEpisodeListItems(show, sorted_seasons)
 	itemlist.SetItems(items)
 	itemlist.SetFocusedItem(0)
 	mc.HideDialogWait()
 elif itemlist and itemlist.GetItem(0).GetProperty("isFilter") == "true":
 	mc.ShowDialogWait()
+	genres = util.getGenres()
+	items = util.getGenreListItems(genres)
+	itemlist.SetItems(items)
+	itemlist.SetFocusedItem(0)
 	mc.HideDialogWait()
 else:
 	mc.ShowDialogWait()	
 	item = itemlist.GetItem(0)
+	filterShowsPath = item.GetPath()
 	
-	shows = util.fetchShows(item.GetPath())
-	shows = sorted(shows, key=operator.attrgetter('name'))
+	if filterShowsPath == util.INTERNAL_RECENTLY_VIEWED:
+		shows = util.loadRecentlyViewedShows()
+	else:
+		shows = util.fetchShows(filterShowsPath)
+		shows = sorted(shows, key=operator.attrgetter('name'))
 	
 	items = util.getShowListItems(shows)
 	itemlist.SetItems(items)
@@ -235,8 +243,14 @@ item = itemlist.GetItem(itemlist.GetFocusedItem())
 if item.GetProperty("isFilter") == "true":
 	mc.ShowDialogWait()
 	win.PushState()
-	shows = util.fetchShows(item.GetPath())
-	shows = sorted(shows, key=operator.attrgetter('name'))
+	filterShowsPath = item.GetPath()
+	shows = []
+	if filterShowsPath == util.INTERNAL_RECENTLY_VIEWED:
+		shows = util.loadRecentlyViewedShows()
+	else:
+		shows = util.fetchShows(filterShowsPath)
+		shows = sorted(shows, key=operator.attrgetter('name'))
+	
 	items = util.getShowListItems(shows)
 	itemlist.SetItems(items)
 	itemlist.SetFocusedItem(0)
@@ -261,7 +275,11 @@ elif item.GetMediaType() == mc.ListItem.MEDIA_UNKNOWN:
 else:
 	mc.ShowDialogWait()	
 	util.addVideoDataToItem(item)
-	mc.HideDialogWait()	
+	show = util.Show()
+	show.name = item.GetTVShowTitle()
+	show.path = item.GetProperty("show.path")
+	util.addShowToRecentList(show)
+	mc.HideDialogWait()		
 	mc.GetPlayer().PlayWithActionMenu(item)
 ]]></onclick>
 				</content>

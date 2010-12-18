@@ -7,28 +7,16 @@ import sys
 TOU_TV_MEDIA_FLAG = 'toutv.mediaData'
 TOU_TV_BASE_URL = 'http://www.tou.tv'
 DATA_VERSION = 3
-DATA_EXPIRATION = 60 * 60 * 24
 KEY_DATA_VERSION = "dataVersion"
-KEY_LAST_SHOW_LIST_UPDATE = "showsLastUpdated"
-KEY_SHOWS = "shows"
 KEY_SUFFIX_SHOW_PATH = ".path"
-KEY_SUFFIX_EPISODE_LIST = ".episodes"
-KEY_SUFFIX_LAST_UPDATED = ".lastUpdated"
-KEY_SUFFIX_SHOW_BACKGROUND = ".backgroundUrl"
-KEY_SUFFIX_EPISODE_TITLE = ".title"
-KEY_SUFFIX_EPISODE_THUMBNAIL = ".thumbnail"
-KEY_SUFFIX_EPISODE_DESCRIPTION = ".description"
-KEY_SUFFIX_EPISODE_VIDEO_URL = ".videoUrl"
-KEY_SUFFIX_EPISODE_SEASON = ".season"
-KEY_SUFFIX_EPISODE_NUMBER = ".number"
-KEY_SUFFIX_EPISODE_DOES_DETAIL_URL_INCLUDE_DATA = ".doesDetailUrlIncludeData"
-KEY_SUFFIX_GENRE_LISTING_PAGE = ".listingPage"
+KEY_RECENTLY_VIEWED = "recentlyViewedShows"
+INTERNAL_RECENTLY_VIEWED = "local://RECENTLY_VIEWED"
 SEPARATOR = "<itemseparator>"
 
 def initCache():
 	appConfig = mc.GetApp().GetLocalConfig()
 	# Could be removed to optimize loading but since data fetching had been optimized, it feels more safe to reset everything on startup
-	#appConfig.ResetAll()
+	# appConfig.ResetAll()
 	
 	currentDataVersion = appConfig.GetValue(KEY_DATA_VERSION)
 	lastUpdate = appConfig.GetValue(KEY_LAST_SHOW_LIST_UPDATE)
@@ -55,6 +43,13 @@ def getGenres():
 		results = re.compile('a id="GenresFooterRepeater.* href="/(.+?)">(.+?)</a>').findall(html)
 		mc.LogDebug("trying to load list of shows...")
 		if len(results) > 0:
+			recentlyViewedShows = loadRecentlyViewedShows()
+			if len(recentlyViewedShows) > 0:
+				genre = Genre()
+				genre.label = "Émissions récemment visionnées"
+				genre.listingPage = INTERNAL_RECENTLY_VIEWED
+				genres.append(genre)
+				
 			for path, name in results:
 				url = TOU_TV_BASE_URL + "/repertoire/" + path
 				genre = Genre()
@@ -261,7 +256,40 @@ def addVideoDataToItem(episodeItem):
 		mc.LogError("skipping item with url " + definitionUrl + ", videopagedefinition: " + videodef)
 	return episodeItem
 	
-
+def addShowToRecentList(show):
+	shows = loadRecentlyViewedShows()
+	if show in set(shows):
+		shows.remove(show)
+	shows.insert(0, show)
+	
+	if len(shows) > 5:
+		del shows[5:len(shows) - 1]
+	
+	updateRecentlyViewedShows(shows)
+	
+def loadRecentlyViewedShows():
+	appConfig = mc.GetApp().GetLocalConfig()
+	recentlyViewedString = appConfig.Implode(SEPARATOR, KEY_RECENTLY_VIEWED)
+	shows = []
+	if recentlyViewedString != "":
+		showlist = recentlyViewedString.split(SEPARATOR)
+		for showname in showlist:
+			show = Show()
+			show.name = showname
+			showPathKey = show.name + KEY_SUFFIX_SHOW_PATH
+			show.path = appConfig.GetValue(showPathKey)
+			shows.append(show)
+	return shows
+	
+def updateRecentlyViewedShows(shows):
+	appConfig = mc.GetApp().GetLocalConfig()
+	appConfig.ResetAll()
+	appConfig.SetValue(KEY_DATA_VERSION, str(DATA_VERSION))
+	for show in shows:
+		appConfig.PushBackValue(KEY_RECENTLY_VIEWED, show.name)
+		key = show.name + KEY_SUFFIX_SHOW_PATH
+		appConfig.SetValue(key, show.path)
+	
 class Episode:
 	title = ""
 	thumbnailUrl = ""
@@ -293,6 +321,12 @@ class Show:
 		self.name = ""
 		self.path = ""
 		self.backgroundUrl = ""
+		
+	def __eq__(self, other) : 
+		return self.name == other.name
+
+	def __hash__(self):
+		return hash(self.name)
 	
 class Genre:
 	label = ""
