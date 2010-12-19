@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <repository>
-   <id>com.mamiemoite</id>
-   <url>http://www.mamiemoite.com/boxee</url>
-   <name>MamieMoite</name>
+   <id>tou-tv-for-boxee</id>
+   <url>http://tou-tv-for-boxee.googlecode.com/svn/trunk/boxee/</url>
+   <name>tou-tv-for-boxee</name>
    <thumb>http://tou-tv-for-boxee.googlecode.com/files/tou-tv-for-boxee.png</thumb>
-   <description>Official MamieMoite repository</description>
+   <description>Official tou-tv-for-boxee repository (until the app gets in the official boxee repository)</description>
 </repository>

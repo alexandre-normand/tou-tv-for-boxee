@@ -14,7 +14,7 @@
       <minversion>0.9.11</minversion>
       <startWindow>14000</startWindow>
       <country-allow>ca</country-allow>
-      <repositoryid>com.mamiemoite</repositoryid>
-      <repository>http://www.mamiemoite.com/boxee</repository>
+      <repositoryid>tou-tv-for-boxee</repositoryid>
+      <repository>http://tou-tv-for-boxee.googlecode.com/svn/trunk/boxee/</repository>
    </app>
 </apps>
