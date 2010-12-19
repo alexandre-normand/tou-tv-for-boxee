@@ -85,7 +85,7 @@ mc.HideDialogWait()
 				<onup>-</onup>
 				<ondown>-</ondown>
 				<onleft>-</onleft>
-				<onright>300</onright>
+				<onright>-</onright>
 				<scrolltime>200</scrolltime>
 				<pagecontrol>60</pagecontrol>
 				<focusposition>2</focusposition>
