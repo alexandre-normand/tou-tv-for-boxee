@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<repository>
+   <id>com.mamiemoite</id>
+   <url>http://www.mamiemoite.com/boxee</url>
+   <name>MamieMoite</name>
+   <thumb>http://tou-tv-for-boxee.googlecode.com/files/tou-tv-for-boxee.png</thumb>
+   <description>Official MamieMoite repository</description>
+</repository>
