@@ -25,6 +25,12 @@ if not itemlist.GetItems():
 	itemlist.SetItems(items)
 	itemlist.SetFocusedItem(0)
 else:
+	firstItem = itemlist.GetItem(0)
+	if firstItem.GetProperty("isFilter") == "true":
+		genres = util.getGenres()
+		items = util.getGenreListItems(genres)
+		itemlist.SetItems(items)
+		itemlist.SetFocusedItem(0)
 	mc.LogDebug("App has already been loaded, skipping...")
 mc.HideDialogWait()
 ]]></onload>
@@ -68,66 +74,6 @@ mc.HideDialogWait()
 				<label>[B]tou.tv[/B]</label>
 				<animation effect="fade" end="30" time="0" condition="true">Conditional</animation>
 			</control>
-			<control type="button" id="300">
-				<description>refresh</description>
-				<posx>1100</posx>
-				<posy>680</posy>
-				<width>120</width>
-				<height>60</height>
-				<align>center</align>
-				<onleft>120</onleft>
-				<textcolor>BBFFFFFF</textcolor>
-				<texturefocus>buttonfocused.png</texturefocus>
-				<texturenofocus>button.png</texturenofocus>
-				<colordiffuse>BBE21F26</colordiffuse>
-				<disabledcolor>88FFFFFF</disabledcolor>
-				<font>sans21</font>
-				<label>Rafraîchir</label>
-				<onclick lang="python">
-				<![CDATA[
-win = mc.GetActiveWindow()
-itemlist = win.GetList(120)
-
-if itemlist and itemlist.GetItem(0).GetMediaType() == mc.ListItem.MEDIA_VIDEO_EPISODE:
-	mc.ShowDialogWait()	
-	item = itemlist.GetItem(0)
-	show = util.Show()
-	show.name = item.GetTVShowTitle()
-	show.path = item.GetProperty("show.path")
-	appConfig = mc.GetApp().GetLocalConfig()
-	
-	episodes = util.fetchShowEpisodes(show)
-	sorted_episodes = sorted(episodes, key=operator.attrgetter('episode'), reverse=True)
-	sorted_seasons = sorted(sorted_episodes, key=operator.attrgetter('season'), reverse=True)
-	items = util.getEpisodeListItems(show, sorted_seasons)
-	itemlist.SetItems(items)
-	itemlist.SetFocusedItem(0)
-	mc.HideDialogWait()
-elif itemlist and itemlist.GetItem(0).GetProperty("isFilter") == "true":
-	mc.ShowDialogWait()
-	genres = util.getGenres()
-	items = util.getGenreListItems(genres)
-	itemlist.SetItems(items)
-	itemlist.SetFocusedItem(0)
-	mc.HideDialogWait()
-else:
-	mc.ShowDialogWait()	
-	item = itemlist.GetItem(0)
-	filterShowsPath = item.GetPath()
-	
-	if filterShowsPath == util.INTERNAL_RECENTLY_VIEWED:
-		shows = util.loadRecentlyViewedShows()
-	else:
-		shows = util.fetchShows(filterShowsPath)
-		shows = sorted(shows, key=operator.attrgetter('name'))
-	
-	items = util.getShowListItems(shows)
-	itemlist.SetItems(items)
-	itemlist.SetFocusedItem(0)
-	mc.HideDialogWait()
-win.GetControl(120).SetFocus()
-]]></onclick>
-			</control>
 		</control>
 		<control type="group">
 			<visible>!Container(120).IsLoading + !Container(120).IsEmpty</visible>
@@ -162,7 +108,7 @@ win.GetControl(120).SetFocus()
 						<align>left</align>
 						<font>sans28</font>
 						<label>$INFO[ListItem.title]</label>
-						<visible>!IsEmpty(Container(120).Listitem.title)</visible>
+						<visible>!IsEmpty(Container(120).Listitem.title) + IsEmpty(Container(120).Listitem.season)</visible>
 						<animation effect="fade" end="30" time="0" condition="true">Conditional</animation>
 					</control>
 					<control type="label">
@@ -213,7 +159,7 @@ win.GetControl(120).SetFocus()
 			                <effect type="fade" start="200" end="30" time="200"/>
 							<effect type="zoom" center="200,0" start="120" end="100" time="200" delay="100" />
 			            </animation>
-			            <visible>!IsEmpty(Container(120).Listitem.title)</visible>
+			            <visible>!IsEmpty(Container(120).Listitem.title) + IsEmpty(Container(120).Listitem.season)</visible>
 					</control>
 					<control type="label" id="5656">
 						<posx>40</posx>

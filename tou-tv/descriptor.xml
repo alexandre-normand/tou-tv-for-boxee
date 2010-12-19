@@ -4,13 +4,14 @@
   <name>tou.tv</name>
   <version>1.0</version>
   <description>tou.tv videos</description>
-  <thumb>http://tou-tv-for-boxee.googlecode.com/files/logo_v2.png</thumb>
+  <thumb>http://tou-tv-for-boxee.googlecode.com/files/tou-tv-for-boxee.png</thumb>
   <media>video</media>
   <copyright>GPL</copyright>
   <email>alexandre.bressani.normand@gmail.com</email>
   <type>skin</type>
   <platform>all</platform>
-  <minversion>0.9.22</minversion>
+  <minversion>0.9.11</minversion>
   <startWindow>14000</startWindow>
   <country-allow>ca</country-allow>
+  <test-app>true</test-app>
 </app>
