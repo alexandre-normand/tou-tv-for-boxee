@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <repository>
-   <id>tou-tv-for-boxee</id>
+   <id>com.googlecode.tou-tv-for-boxee</id>
    <url>http://tou-tv-for-boxee.googlecode.com/svn/trunk/boxee/</url>
    <name>tou-tv-for-boxee</name>
    <thumb>http://tou-tv-for-boxee.googlecode.com/files/tou-tv-for-boxee.png</thumb>
