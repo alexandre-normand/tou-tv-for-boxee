@@ -43,12 +43,10 @@ def getGenres():
 		results = re.compile('a id="GenresFooterRepeater.* href="/(.+?)">(.+?)</a>').findall(html)
 		mc.LogDebug("trying to load list of shows...")
 		if len(results) > 0:
-			recentlyViewedShows = loadRecentlyViewedShows()
-			if len(recentlyViewedShows) > 0:
-				genre = Genre()
-				genre.label = "Émissions récemment visionnées"
-				genre.listingPage = INTERNAL_RECENTLY_VIEWED
-				genres.append(genre)
+			genre = Genre()
+			genre.label = "Émissions récemment visionnées"
+			genre.listingPage = INTERNAL_RECENTLY_VIEWED
+			genres.append(genre)
 				
 			for path, name in results:
 				url = TOU_TV_BASE_URL + "/repertoire/" + path
