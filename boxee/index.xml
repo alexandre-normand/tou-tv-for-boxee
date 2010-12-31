@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <apps>
    <app>
-      <id>tou-tv</id>
+      <id>com.googlecode.tou-tv-for-boxee.tou-tv</id>
       <name>tou.tv</name>
       <version>1.6</version>
       <description>tou.tv videos</description>
