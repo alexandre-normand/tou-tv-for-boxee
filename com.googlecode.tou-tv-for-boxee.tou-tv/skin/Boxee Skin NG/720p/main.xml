@@ -11,6 +11,8 @@ mc.ShowDialogWait()
 window = mc.GetWindow(14000)
 itemlist = window.GetList(120)
 
+util.initialGet()
+
 # make sure app has not been loaded yet
 if not itemlist.GetItems():
 	mc.LogDebug("App is NOT initialized...loading...")
