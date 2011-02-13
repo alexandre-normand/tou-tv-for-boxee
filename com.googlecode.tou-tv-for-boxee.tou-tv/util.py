@@ -106,7 +106,8 @@ def fetchShowEpisodes(show):
 		jsonEpisodes = obj["d"]["Episodes"]
 		jsonEmission = obj['d']['Emission']
 
-		show.backgroundUrl = jsonEmission["ImageBackground"].encode("ascii")
+		if(jsonEmission["ImageBackground"] != None):
+			show.backgroundUrl = jsonEmission["ImageBackground"].encode("ascii")
 
 		for e in jsonEpisodes:
 			episode = Episode()
@@ -114,7 +115,8 @@ def fetchShowEpisodes(show):
 			episode.description = e["Description"].encode("utf-8")
 			episode.season = e["SeasonNumber"]
 			episode.episode = e["EpisodeNumber"]
-			episode.thumbnailUrl = e["ImageThumbMicroG"].encode("ascii")
+			if(e["ImageThumbMicroG"] != None):
+				episode.thumbnailUrl = e["ImageThumbMicroG"].encode("ascii")
 			episode.path = "http://release.theplatform.com/content.select?pid=" + e["PID"].encode("ascii") + "&format=SMIL"
 			episodes.append(episode)
 
