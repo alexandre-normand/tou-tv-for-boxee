@@ -170,18 +170,18 @@ def getEpisodeListItems(show, episodes):
 
 def addVideoDataToItem(episodeItem):
 	sg = mc.Http()
-	definitionUrl = episodeItem.GetPath()
-	videodef = sg.Get(definitionUrl)
-	rtmp_url = re.search("<meta base='rtmp:(. + ?)'", videodef)
-	playurl = re.search("<ref src='mp4:(. + ?)'", videodef)
+	videodef = sg.Get(episodeItem.GetPath())
+	rtmp_url = re.search('<meta base="rtmp:(.+?)"', videodef)
+	playurl = re.search('<ref src="mp4:(.+?)"', videodef)
 	if playurl:
 		playpath = "mp4:" + playurl.group(1)
 		rtmpURL = "rtmp:" + rtmp_url.group(1)
-		authpath = re.search("auth=(.*)&", rtmpURL)
+		authpath = re.search('auth=(.*)&', rtmpURL)
 		episodeItem.SetPath(rtmpURL)
 		episodeItem.SetProperty("PlayPath", playpath)
+		mc.LogError("Play: " + rtmpURL + ", PlaayPath: " + playpath)
 	else:
-		mc.LogError("skipping item with url " + definitionUrl + ", videopagedefinition: " + videodef)
+		mc.LogError("skipping item with url " + episodeItem.GetPath() + ", videopagedefinition: " + videodef)
 	return episodeItem
 
 def addShowToRecentList(show):
