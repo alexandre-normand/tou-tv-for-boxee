@@ -2,7 +2,7 @@
 <app>
   <id>com.googlecode.tou-tv-for-boxee.tou-tv</id>
   <name>tou.tv</name>
-  <version>1.7.3</version>
+  <version>1.8</version>
   <description>tou.tv videos</description>
   <thumb>http://tou-tv-for-boxee.googlecode.com/files/tou-tv-for-boxee.png</thumb>
   <media>video</media>
