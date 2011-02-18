@@ -45,7 +45,7 @@ mc.HideDialogWait()
 		<control type="image" id="102">
 			<width>1280</width>
 			<height>720</height>
-			<texture>bc_background_plain.png</texture>
+			<texture>tou-tv-for-boxee-background.png</texture>
 		</control>
 		<control type="group">
 			<control type="image">
@@ -61,20 +61,18 @@ mc.HideDialogWait()
 				<posx>0</posx>
 				<width>1280</width>
 				<fadetime>200</fadetime>
+				<colordiffuse>FFFFFFFF</colordiffuse>
 				<aspectratio>scale</aspectratio>
 				<info>Container(120).Listitem.property(custom:background)</info>
 			</control>
-			<control type="label" id="100">
+			<control type="image" id="100">
 				<posx>24</posx>
 				<posy>10</posy>
-				<width>400</width>
+				<width>143</width>
 				<height>100</height>
 				<align>left</align>
-				<!--<textcolor>white</textcolor>-->
-				<textcolor>BBE21F26</textcolor>
-				<font>sans28</font>
-				<label>[B]tou.tv[/B]</label>
-				<animation effect="fade" end="30" time="0" condition="true">Conditional</animation>
+				<texture>titlebacksplash.png</texture>
+				<animation effect="fade" end="80" time="0" condition="true">Conditional</animation>
 			</control>
 		</control>
 		<control type="group">
@@ -249,12 +247,12 @@ else:
 			</control>	
 		</control>
 		<control type="label">
-			<posx>24</posx>
-			<posy>65</posy>
+			<posx>200</posx>
+			<posy>38</posy>
 			<width>670</width>
 			<height>100</height>
 			<align>left</align>
-			<textcolor>BBE21F26</textcolor>
+			<textcolor>white</textcolor>
 			<font>sans28</font>
 			<label>[B]$INFO[Container(120).Listitem.tvshowtitle][/B]</label>
 			<visible>!IsEmpty(Container(120).Listitem.tvshowtitle)</visible>
@@ -262,7 +260,7 @@ else:
 		<control type="group">
 			<posy>272</posy>
 			<posx>840</posx>
-			<visible>!Container(120).IsLoading + !Container(120).IsEmpty</visible>	
+			<visible>!Container(120).IsLoading + !Container(120).IsEmpty</visible>
 			<control type="label">
 				<posx>0</posx>
 				<posy>0</posy>
