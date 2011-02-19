@@ -61,9 +61,9 @@ mc.HideDialogWait()
 				<posx>0</posx>
 				<width>1280</width>
 				<fadetime>200</fadetime>
-				<colordiffuse>FFFFFFFF</colordiffuse>
 				<aspectratio>scale</aspectratio>
 				<info>Container(120).Listitem.property(custom:background)</info>
+				<texture diffuse="showthememask.png"></texture>
 			</control>
 			<control type="image" id="100">
 				<posx>24</posx>
