@@ -6,8 +6,7 @@ VERSION=`cat com.googlecode.tou-tv-for-boxee.tou-tv/descriptor.xml | grep "<vers
 rm -f boxee/download/com.googlecode.tou-tv-for-boxee.tou-tv-$VERSION.zip
 
 # Create packaging folder
-svn export com.googlecode.tou-tv-for-boxee.tou-tv packaging
-
+mkdir packaging
 cd packaging
 
 #Export files in folder
