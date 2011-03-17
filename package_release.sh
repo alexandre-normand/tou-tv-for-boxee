@@ -12,17 +12,15 @@ cd packaging_release
 #Export files in folder
 svn export ../com.googlecode.tou-tv-for-boxee.tou-tv tou-tv
 
-cd tou-tv
-
 # IMPORTANT: Remove this once the boxee team fixes their bugs that affect the boxee box versions. This restricts the app to non boxee box versions. 
 sed -i.bak 's/\<minversion\>0\.9\.11\<\/minversion\>/\<minversion\>0\.9\.11\<\/minversion\>\
-  \<maxversion\>0\.9\.29\<\/maxversion\>/g' descriptor.xml
-rm descriptor.xml.bak
+  \<maxversion\>0\.9\.29\<\/maxversion\>/g' tou-tv/descriptor.xml
+rm tou-tv/descriptor.xml.bak
 
 # Zip files
-zip -r ../../releases/tou-tv-$VERSION.zip -xi .
+zip -r ../releases/tou-tv-$VERSION.zip -xi .
 
-cd ../..
+cd ..
 rm -rf packaging_release
 
 exit 0
