@@ -173,15 +173,15 @@ def getEpisodeListItems(show, episodes):
 def addVideoDataToItem(episodeItem):
 	sg = mc.Http()
 	videodef = sg.Get(episodeItem.GetPath())
-	rtmp_url = re.search('<meta base="rtmp:(.+?)"', videodef)
-	playurl = re.search('<ref src="mp4:(.+?)"', videodef)
+	rtmp_url = re.search('rtmp:(.+?)&lt;break&gt;', videodef)
+	playurl = re.search('mp4:(.+?)"', videodef)
 	if playurl:
 		playpath = "mp4:" + playurl.group(1)
 		rtmpURL = "rtmp:" + rtmp_url.group(1)
 		authpath = re.search('auth=(.*)&', rtmpURL)
 		episodeItem.SetPath(rtmpURL)
 		episodeItem.SetProperty("PlayPath", playpath)
-		mc.LogError("Play: " + rtmpURL + ", PlaayPath: " + playpath)
+		mc.LogError("Play: " + rtmpURL + ", PlayPath: " + playpath)
 	else:
 		mc.LogError("skipping item with url " + episodeItem.GetPath() + ", videopagedefinition: " + videodef)
 	return episodeItem

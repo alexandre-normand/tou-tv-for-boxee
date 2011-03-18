@@ -7,4 +7,4 @@ cp com.googlecode.tou-tv-for-boxee.tou-tv/skin/Boxee\ Skin\ NG/media/*.png ~/Lib
 sed -i.bak 's/<\/app>/<test-app>true<\/test-app><\/app>/g' ~/Library/Application\ Support/BOXEE/UserData/apps/com.googlecode.tou-tv-for-boxee.tou-tv/descriptor.xml
 
 #Replace id for custom repository
-sed -i.bak 's/tou-tv/com.googlecode.tou-tv-for-boxee.tou-tv/g' com.googlecode.tou-tv-for-boxee.tou-tv/descriptor.xml
+sed -i.bak 's/\<id\>tou-tv\<\/id\>/\<id\>com.googlecode.tou-tv-for-boxee.tou-tv\<\/id\>/g' ~/Library/Application\ Support/BOXEE/UserData/apps/com.googlecode.tou-tv-for-boxee.tou-tv/descriptor.xml
