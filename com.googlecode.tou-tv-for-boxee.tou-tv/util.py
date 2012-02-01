@@ -117,7 +117,7 @@ def fetchShowEpisodes(show):
 			episode.episode = e["EpisodeNumber"]
 			if(e["ImageThumbMicroG"] != None):
 				episode.thumbnailUrl = e["ImageThumbMicroG"].encode("ascii")
-			episode.path = "http://release.theplatform.com/content.select?pid=" + e["PID"].encode("ascii") + "&format=SMIL"
+			episode.path = "http://api.radio-canada.ca/validationMedia/v1/Validation.html?appCode=thePlatform&deviceType=iphone4&connectionType=wifi&idMedia=" + e["PID"].encode("ascii") + "&output=json"
 			episodes.append(episode)
 
 	except:
@@ -173,15 +173,12 @@ def getEpisodeListItems(show, episodes):
 def addVideoDataToItem(episodeItem):
 	sg = mc.Http()
 	videodef = sg.Get(episodeItem.GetPath())
-	rtmp_url = re.search('rtmp:(.+?)&lt;break&gt;', videodef)
-	playurl = re.search('mp4:(.+?)"', videodef)
-	if playurl:
-		playpath = "mp4:" + playurl.group(1)
-		rtmpURL = "rtmp:" + rtmp_url.group(1)
-		authpath = re.search('auth=(.*)&', rtmpURL)
-		episodeItem.SetPath(rtmpURL)
-		episodeItem.SetProperty("PlayPath", playpath)
-		mc.LogError("Play: " + rtmpURL + ", PlayPath: " + playpath)
+	print videodef
+	videodata = json.loads(videodef)
+	if videodata["url"]:
+		url = videodata["url"].encode("ascii")
+		episodeItem.SetPath(url)
+		mc.LogError("Play: " + url)
 	else:
 		mc.LogError("skipping item with url " + episodeItem.GetPath() + ", videopagedefinition: " + videodef)
 	return episodeItem
@@ -222,6 +219,7 @@ def updateRecentlyViewedShows(shows):
 		appConfig.PushBackValue(KEY_RECENTLY_VIEWED, show.name)
 		key = show.name + KEY_SUFFIX_SHOW_PATH
 		appConfig.SetValue(key, show.path)
+		
 
 class Episode:
 	title = ""

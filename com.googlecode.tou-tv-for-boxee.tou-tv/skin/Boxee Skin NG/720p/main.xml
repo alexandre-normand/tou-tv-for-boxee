@@ -6,6 +6,8 @@
 import re
 import util
 import operator
+from urllib import quote_plus, urlencode
+
 mc.ShowDialogWait()
 
 window = mc.GetWindow(14000)
@@ -223,10 +225,20 @@ else:
 	util.addVideoDataToItem(item)
 	show = util.Show()
 	show.name = item.GetTVShowTitle()
-	show.path = item.GetProperty("show.path")
+	show.path = item.GetPath()
 	util.addShowToRecentList(show)
-	mc.HideDialogWait()		
-	mc.GetPlayer().PlayWithActionMenu(item)
+	
+	params = { 'live':'0' }
+	playlist_url = "playlist://%s?%s" % (quote_plus(show.path), urlencode(params))
+
+	print playlist_url
+
+	item = mc.ListItem(mc.ListItem.MEDIA_VIDEO_EPISODE)
+	item.SetPath(playlist_url)
+	item.SetLabel(item.GetTVShowTitle())
+	item.SetContentType = 'application/vnd.apple.mpegurl'
+	mc.HideDialogWait()
+	mc.GetPlayer().Play(item)
 ]]></onclick>
 				</content>
 			</control>
