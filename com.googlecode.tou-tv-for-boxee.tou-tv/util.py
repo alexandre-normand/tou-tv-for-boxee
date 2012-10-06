@@ -22,10 +22,6 @@ globalShows = None
 globalGenres = None
 
 
-def getShowsFromCache():
-    pass
-
-
 def initialGet():
 
     global globalShows
