@@ -159,6 +159,7 @@ def getShowListItems(shows):
         showItems.append(showItem)
     return showItems
 
+
 def getEpisodeListItems(show, episodes):
     episodeItems = mc.ListItems()
     for episode in episodes:
@@ -192,6 +193,7 @@ def addVideoDataToItem(episodeItem):
         mc.LogError("skipping item with url " + episodeItem.GetPath() + ", videopagedefinition: " + videodef)
     return episodeItem
 
+
 def addShowToRecentList(show):
     shows = loadRecentlyViewedShows()
     if show in set(shows):
@@ -206,6 +208,9 @@ def addShowToRecentList(show):
 
 def loadRecentlyViewedShows():
     appConfig = mc.GetApp().GetLocalConfig()
+    if appConfig.GetValue(KEY_DATA_VERSION) != DATA_VERSION:
+        appConfig.ResetAll()
+        return []
     recentlyViewedString = appConfig.Implode(SEPARATOR, KEY_RECENTLY_VIEWED)
     shows = []
     if recentlyViewedString != "":
@@ -242,17 +247,34 @@ class Episode:
         self.season = 0
         self.episode = 0
 
+
 class Show:
     def __init__(self):
         self.name = ""
         self.path = ""
         self.backgroundUrl = ""
 
-    def __eq__(self, other) :
-        return self.name == other.name
-
     def __hash__(self):
-        return hash(self.name)
+        return hash(self.name.lower())
+
+    def __lt__(self, other):
+        return self.name.lower() < other.name.lower()
+
+    def __le__(self, other):
+        return self.name.lower() <= other.name.lower()
+
+    def __eq__(self, other):
+        return self.name.lower() == other.name.lower()
+
+    def __ne__(self, other):
+        return self.name.lower() != other.name.lower()
+
+    def __gt__(self, other):
+        return self.name.lower() > other.name.lower()
+
+    def __ge__(self, other):
+        return self.name.lower() >= other.name.lower()
+
 
 class Genre:
     def __init__(self):

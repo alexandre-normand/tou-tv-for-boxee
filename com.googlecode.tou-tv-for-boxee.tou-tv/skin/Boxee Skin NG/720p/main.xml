@@ -22,7 +22,7 @@ if not itemlist.GetItems():
 	genres = util.getGenres()
 	
 	#shows = util.getShowsFromCache()
-	#shows = sorted(shows, key=operator.attrgetter('name').lower())
+	#shows = sorted(shows, key=operator.attrgetter('name'))
 	
 	#items = util.getShowListItems(shows)
 	items = util.getGenreListItems(genres)
@@ -197,7 +197,7 @@ if item.GetProperty("isFilter") == "true":
 		shows = util.loadRecentlyViewedShows()
 	else:
 		shows = util.fetchShows(filterShowsPath)
-		shows = sorted(shows, key=operator.attrgetter('name').lower())
+		shows = sorted(shows, key=operator.attrgetter('name'))
 	
 	items = util.getShowListItems(shows)
 	itemlist.SetItems(items)
@@ -210,8 +210,8 @@ elif item.GetMediaType() == mc.ListItem.MEDIA_UNKNOWN:
 	show.path = item.GetPath()
 	show.name = item.GetLabel()
 	episodes = util.fetchShowEpisodes(show)
-	sorted_episodes = sorted(episodes, key=operator.attrgetter('episode').lower(), reverse=True)
-	sorted_seasons = sorted(sorted_episodes, key=operator.attrgetter('season').lower(), reverse=True)	
+	sorted_episodes = sorted(episodes, key=operator.attrgetter('episode'), reverse=True)
+	sorted_seasons = sorted(sorted_episodes, key=operator.attrgetter('season'), reverse=True)	
 	items = util.getEpisodeListItems(show, sorted_seasons)
 	itemlist.SetItems(items)
 	mc.LogDebug("checking if everything is there:")
