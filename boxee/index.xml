@@ -3,7 +3,7 @@
    <app>
       <id>com.googlecode.tou-tv-for-boxee.tou-tv</id>
       <name>tou.tv</name>
-      <version>2.4</version>
+      <version>2.3</version>
       <description>Webtélé avec toutes les vidéos sur demande offertes sur le site http://tou.tv. (Contenu Canadien français).</description>
       <thumb>http://tou-tv-for-boxee.googlecode.com/files/tou-tv-for-boxee-2.0.png</thumb>
       <media>video</media>
